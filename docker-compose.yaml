@@ -6,8 +6,9 @@ services:
         VIBE_KANBAN_VERSION: "latest"
 
     ports:
-      - "${VIBE_KANBAN_PORT:-3007}:3007"   # vibe-kanban
-      - "${VS_CODE_PORT:-3008}:3008"   # vscode
+      - "${CADDY_PORT:-3001}:3001"         # caddy (main entry point)
+      - "${VIBE_KANBAN_PORT:-3007}:3007"   # vibe-kanban (direct access)
+      - "${VS_CODE_PORT:-3008}:3008"       # vscode (direct access)
 
     environment:
       VIBE_KANBAN_VERSION: ${VIBE_KANBAN_VERSION:-latest}

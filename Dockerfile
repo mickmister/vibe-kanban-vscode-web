@@ -1,6 +1,6 @@
 FROM node:20-bullseye
 
-# Install development tools and supervisor
+# Install development tools, supervisor, and Caddy
 RUN apt-get update && apt-get install -y \
     curl \
     wget \
@@ -9,6 +9,13 @@ RUN apt-get update && apt-get install -y \
     python3 \
     supervisor \
     ca-certificates \
+    debian-keyring \
+    debian-archive-keyring \
+    apt-transport-https \
+    && curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg \
+    && curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' | tee /etc/apt/sources.list.d/caddy-stable.list \
+    && apt-get update \
+    && apt-get install -y caddy \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -29,9 +36,12 @@ RUN mkdir -p /etc/supervisor/conf.d
 # Copy supervisord config
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
+# Copy Caddyfile
+COPY Caddyfile /etc/caddy/Caddyfile
+
+EXPOSE 3001
 EXPOSE 3007
 EXPOSE 3008
-EXPOSE 8080
 
 # default supervisord in foreground
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
