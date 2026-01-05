@@ -55,6 +55,10 @@ COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 # Copy Caddyfile
 COPY Caddyfile /etc/caddy/Caddyfile
 
+# Copy database backup script
+COPY backup-vibe-kanban-db.sh /usr/local/bin/backup-vibe-kanban-db.sh
+RUN chmod +x /usr/local/bin/backup-vibe-kanban-db.sh
+
 # Copy default VS Code settings
 RUN mkdir -p /home/vkuser/.local/share/code-server/User
 COPY default-settings.json /home/vkuser/.local/share/code-server/User/settings.json
