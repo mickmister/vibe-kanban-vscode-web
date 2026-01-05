@@ -12,5 +12,6 @@ services:
 
     environment:
       VIBE_KANBAN_VERSION: ${VIBE_KANBAN_VERSION:-latest}
+      CADDY_PORT: 3001
       BACKEND_PORT: 3007 # vibe-kanban
       PORT: 3008 # vscode
