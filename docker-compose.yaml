@@ -31,9 +31,12 @@ services:
       - code-server-data:/home/vkuser/.local/share/code-server
       # Persist Claude Code data
       - claude-data:/home/vkuser/.claude
+      # Persist GitHub CLI authentication
+      - gh-config:/home/vkuser/.config/gh
 
 volumes:
   vibe-kanban-data:
   vibe-kanban-worktrees:
   code-server-data:
   claude-data:
+  gh-config:

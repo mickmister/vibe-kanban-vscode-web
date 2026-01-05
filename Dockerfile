@@ -1,6 +1,6 @@
 FROM node:20-bullseye
 
-# Install development tools, supervisor, and Caddy
+# Install development tools, supervisor, Caddy, and GitHub CLI
 RUN apt-get update && apt-get install -y \
     curl \
     wget \
@@ -14,8 +14,11 @@ RUN apt-get update && apt-get install -y \
     apt-transport-https \
     && curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg \
     && curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' | tee /etc/apt/sources.list.d/caddy-stable.list \
+    && curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg \
+    && chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg \
+    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
     && apt-get update \
-    && apt-get install -y caddy \
+    && apt-get install -y caddy gh \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -26,6 +29,7 @@ RUN curl -fsSL https://code-server.dev/install.sh | sh
 RUN useradd -m -s /bin/bash vkuser && \
     mkdir -p /home/vkuser/.local/share/ai.bloop.vibe-kanban \
              /home/vkuser/.config/code-server \
+             /home/vkuser/.config/gh \
              /home/vkuser/.npm \
              /home/vkuser/.cache \
              /home/vkuser/.claude \
