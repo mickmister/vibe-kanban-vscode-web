@@ -13,12 +13,13 @@ services:
     ports:
       - "8080:8080"   # code-server
       - "3007:3007"   # vibe-kanban backend
+      - "3008:3008"   # vibe-kanban frontend
 
     environment:
       # Optional runtime override when using npx
       # Only effective if supervisord command uses npx vibe-kanban@$VIBE_KANBAN_VERSION
       VIBE_KANBAN_VERSION: "latest"
-      # PORT: "3006"
+      PORT: "3007"
       # BACKEND_PORT: "3007"
 
     # restart: unless-stopped

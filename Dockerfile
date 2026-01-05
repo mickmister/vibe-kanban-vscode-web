@@ -29,5 +29,9 @@ RUN mkdir -p /etc/supervisor/conf.d
 # Copy supervisord config
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
+EXPOSE 3007
+EXPOSE 3008
+EXPOSE 8080
+
 # default supervisord in foreground
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
