@@ -3,23 +3,13 @@ services:
     build:
       context: .
       args:
-        # Optional build-time pin
         VIBE_KANBAN_VERSION: "latest"
 
-    # image: code-vibe
-
-    # container_name: code-vibe
-
     ports:
-      - "8080:8080"   # code-server
-      - "3007:3007"   # vibe-kanban backend
-      - "3008:3008"   # vibe-kanban frontend
+      - "${VIBE_KANBAN_PORT:-3007}:3007"   # vibe-kanban
+      - "${VS_CODE_PORT:-3008}:3008"   # vscode
 
     environment:
-      # Optional runtime override when using npx
-      # Only effective if supervisord command uses npx vibe-kanban@$VIBE_KANBAN_VERSION
-      VIBE_KANBAN_VERSION: "latest"
-      PORT: "3008"
-      BACKEND_PORT: "3007"
-
-    # restart: unless-stopped
+      VIBE_KANBAN_VERSION: ${VIBE_KANBAN_VERSION:-latest}
+      BACKEND_PORT: 3007 # vibe-kanban
+      PORT: 3008 # vscode
