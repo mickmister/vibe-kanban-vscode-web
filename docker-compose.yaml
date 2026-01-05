@@ -11,7 +11,7 @@ services:
     # container_name: code-vibe
 
     ports:
-      - "8080:8080"   # code-server
+      # - "8080:8080"   # code-server
       - "3006:3006"   # vibe-kanban (if it binds here)
 
     environment:
