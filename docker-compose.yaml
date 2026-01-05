@@ -33,9 +33,7 @@ services:
       - claude-data:/home/vkuser/.claude
       # Persist GitHub CLI authentication
       - gh-config:/home/vkuser/.config/gh
-      # Persist npm global packages
-      - npm-global:/home/vkuser/.npm-global
-      # Persist npm cache
+      # Persist npm cache (speeds up installs)
       - npm-cache:/home/vkuser/.npm
       # Persist pnpm store
       - pnpm-store:/home/vkuser/.local/share/pnpm
@@ -47,6 +45,5 @@ volumes:
   code-server-data:
   claude-data:
   gh-config:
-  npm-global:
   npm-cache:
   pnpm-store:

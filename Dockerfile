@@ -46,10 +46,12 @@ RUN su - vkuser -c "npm config set prefix '/home/vkuser/.npm-global'"
 # Create supervisor log directory
 RUN mkdir -p /var/log/supervisor
 
-# Install tools
+# Install tools globally as root (will be available system-wide)
+RUN npm install -g @anthropic-ai/claude-code pnpm
+
+# Pre-install vibe-kanban at build time (optional, speeds up first start)
 ARG VIBE_KANBAN_VERSION="latest"
-RUN npm install -g @anthropic-ai/claude-code \
-    && npm install -g vibe-kanban@"$VIBE_KANBAN_VERSION"
+RUN npm install -g vibe-kanban@"$VIBE_KANBAN_VERSION"
 
 # Create supervisor config directory
 RUN mkdir -p /etc/supervisor/conf.d
