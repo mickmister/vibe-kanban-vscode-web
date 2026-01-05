@@ -22,6 +22,11 @@ RUN apt-get update && apt-get install -y \
 # Install code-server using official install script
 RUN curl -fsSL https://code-server.dev/install.sh | sh
 
+# Create a non-root user for running applications
+RUN useradd -m -s /bin/bash vkuser && \
+    mkdir -p /home/vkuser/.vibe-kanban && \
+    chown -R vkuser:vkuser /home/vkuser
+
 # Create supervisor log directory
 RUN mkdir -p /var/log/supervisor
 
