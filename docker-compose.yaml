@@ -18,3 +18,19 @@ services:
 
       PASSWORD: ${CODE_PASSWORD}
       SUDO_PASSWORD: ${SUDO_PASSWORD}
+
+    volumes:
+      # Persist git repositories
+      # - ~/repos:/home/vkuser/repos
+      - vibe-kanban-repos:/home/vkuser/repos
+      # Persist vibe-kanban database and data
+      - vibe-kanban-data:/home/vkuser/.local/share/ai.bloop.vibe-kanban
+      # Persist worktrees
+      - vibe-kanban-worktrees:/var/tmp/vibe-kanban/worktrees
+      # Persist code-server settings (optional, but allows user customizations to persist)
+      - code-server-data:/home/vkuser/.local/share/code-server
+
+volumes:
+  vibe-kanban-data:
+  vibe-kanban-worktrees:
+  code-server-data:

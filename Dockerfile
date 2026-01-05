@@ -49,6 +49,11 @@ COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 # Copy Caddyfile
 COPY Caddyfile /etc/caddy/Caddyfile
 
+# Copy default VS Code settings
+RUN mkdir -p /home/vkuser/.local/share/code-server/User
+COPY default-settings.json /home/vkuser/.local/share/code-server/User/settings.json
+RUN chown -R vkuser:vkuser /home/vkuser/.local
+
 EXPOSE 3001
 EXPOSE 3007
 EXPOSE 3008
