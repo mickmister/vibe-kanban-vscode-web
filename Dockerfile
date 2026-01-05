@@ -12,8 +12,8 @@ RUN apt-get update && apt-get install -y \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Install code-server globally via npm
-RUN npm install -g code-server
+# Install code-server using official install script
+RUN curl -fsSL https://code-server.dev/install.sh | sh
 
 # Create supervisor log directory
 RUN mkdir -p /var/log/supervisor
