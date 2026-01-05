@@ -27,8 +27,10 @@ RUN useradd -m -s /bin/bash vkuser && \
     mkdir -p /home/vkuser/.vibe-kanban \
              /home/vkuser/.config/code-server \
              /home/vkuser/.npm \
-             /home/vkuser/.cache && \
-    chown -R vkuser:vkuser /home/vkuser
+             /home/vkuser/.cache \
+             /var/tmp/vibe-kanban/worktrees && \
+    chown -R vkuser:vkuser /home/vkuser && \
+    chown -R vkuser:vkuser /var/tmp/vibe-kanban
 
 # Create supervisor log directory
 RUN mkdir -p /var/log/supervisor
