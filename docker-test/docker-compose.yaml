@@ -1,0 +1,22 @@
+services:
+  code-vibe:
+    build:
+      context: .
+      args:
+        # Optional build-time pin
+        VIBE_KANBAN_VERSION: "latest"
+
+    # image: code-vibe
+
+    container_name: code-vibe
+
+    ports:
+      - "8080:8080"   # code-server
+      - "3000:3000"   # vibe-kanban (if it binds here)
+
+    environment:
+      # Optional runtime override when using npx
+      # Only effective if supervisord command uses npx vibe-kanban@$VIBE_KANBAN_VERSION
+      VIBE_KANBAN_VERSION: "latest"
+
+    restart: unless-stopped
