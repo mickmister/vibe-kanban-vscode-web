@@ -11,9 +11,8 @@ services:
     # container_name: code-vibe
 
     ports:
-      # - "8080:8080"   # code-server
-      - "3006:3006"   # vibe-kanban (if it binds here)
-      - "3007:3007"   # vibe-kanban (if it binds here)
+      - "8080:8080"   # code-server
+      - "3007:3007"   # vibe-kanban backend
 
     environment:
       # Optional runtime override when using npx
