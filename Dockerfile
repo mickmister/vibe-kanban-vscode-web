@@ -30,6 +30,7 @@ RUN useradd -m -s /bin/bash vkuser && \
     mkdir -p /home/vkuser/.local/share/ai.bloop.vibe-kanban \
              /home/vkuser/.config/code-server \
              /home/vkuser/.config/gh \
+             /home/vkuser/.npm-global \
              /home/vkuser/.npm \
              /home/vkuser/.cache \
              /home/vkuser/.claude \
@@ -37,6 +38,9 @@ RUN useradd -m -s /bin/bash vkuser && \
              /var/tmp/vibe-kanban/worktrees && \
     chown -R vkuser:vkuser /home/vkuser && \
     chown -R vkuser:vkuser /var/tmp/vibe-kanban
+
+# Configure npm to use user-local directory for global packages
+RUN su - vkuser -c "npm config set prefix '/home/vkuser/.npm-global'"
 
 # Create supervisor log directory
 RUN mkdir -p /var/log/supervisor
