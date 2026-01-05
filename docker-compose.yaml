@@ -35,6 +35,7 @@ services:
       - gh-config:/home/vkuser/.config/gh
 
 volumes:
+  vibe-kanban-repos:
   vibe-kanban-data:
   vibe-kanban-worktrees:
   code-server-data:
