@@ -53,6 +53,10 @@ COPY Caddyfile /etc/caddy/Caddyfile
 # Copy default VS Code settings
 RUN mkdir -p /home/vkuser/.local/share/code-server/User
 COPY default-settings.json /home/vkuser/.local/share/code-server/User/settings.json
+
+# Install Claude Code extension
+RUN code-server --install-extension anthropic.claude-code
+
 RUN chown -R vkuser:vkuser /home/vkuser/.local
 
 EXPOSE 3001
