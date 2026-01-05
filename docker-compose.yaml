@@ -29,8 +29,11 @@ services:
       - vibe-kanban-worktrees:/var/tmp/vibe-kanban/worktrees
       # Persist code-server settings (optional, but allows user customizations to persist)
       - code-server-data:/home/vkuser/.local/share/code-server
+      # Persist Claude Code data
+      - claude-data:/home/vkuser/.claude
 
 volumes:
   vibe-kanban-data:
   vibe-kanban-worktrees:
   code-server-data:
+  claude-data:

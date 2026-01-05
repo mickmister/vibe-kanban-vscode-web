@@ -28,6 +28,7 @@ RUN useradd -m -s /bin/bash vkuser && \
              /home/vkuser/.config/code-server \
              /home/vkuser/.npm \
              /home/vkuser/.cache \
+             /home/vkuser/.claude \
              /home/vkuser/repos \
              /var/tmp/vibe-kanban/worktrees && \
     chown -R vkuser:vkuser /home/vkuser && \
