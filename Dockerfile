@@ -63,6 +63,10 @@ COPY Caddyfile /etc/caddy/Caddyfile
 COPY backup-vibe-kanban-db.sh /usr/local/bin/backup-vibe-kanban-db.sh
 RUN chmod +x /usr/local/bin/backup-vibe-kanban-db.sh
 
+# Copy debug script
+COPY debug-paths.sh /usr/local/bin/debug-paths.sh
+RUN chmod +x /usr/local/bin/debug-paths.sh
+
 # Copy default VS Code settings
 RUN mkdir -p /home/vkuser/.local/share/code-server/User
 COPY default-settings.json /home/vkuser/.local/share/code-server/User/settings.json
