@@ -24,7 +24,10 @@ RUN curl -fsSL https://code-server.dev/install.sh | sh
 
 # Create a non-root user for running applications
 RUN useradd -m -s /bin/bash vkuser && \
-    mkdir -p /home/vkuser/.vibe-kanban && \
+    mkdir -p /home/vkuser/.vibe-kanban \
+             /home/vkuser/.config/code-server \
+             /home/vkuser/.npm \
+             /home/vkuser/.cache && \
     chown -R vkuser:vkuser /home/vkuser
 
 # Create supervisor log directory
