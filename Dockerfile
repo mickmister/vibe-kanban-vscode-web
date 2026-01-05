@@ -27,7 +27,7 @@ RUN curl -fsSL https://code-server.dev/install.sh | sh
 
 # Create a non-root user for running applications
 RUN useradd -m -s /bin/bash vkuser && \
-    mkdir -p /home/vkuser/.local/share/ai.bloop.vibe-kanban \
+    mkdir -p /home/vkuser/.local/share/vibe-kanban \
              /home/vkuser/.config/code-server \
              /home/vkuser/.config/gh \
              /home/vkuser/.npm-global \

@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-DB_DIR="/home/vkuser/.local/share/ai.bloop.vibe-kanban"
+DB_DIR="/home/vkuser/.local/share/vibe-kanban"
 DB_FILE="$DB_DIR/db.sqlite"
 VERSION_FILE="$DB_DIR/.last-vk-version"
 
