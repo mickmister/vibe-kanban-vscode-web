@@ -1,6 +1,6 @@
-# Dynamic port forwarding via subdomain: port-<port_num>.* -> localhost:<port_num>
+# Dynamic port forwarding via subdomain: vk-port-<port_num>.* -> localhost:<port_num>
 @port_subdomain {
-	host_regexp port port-([0-9]+)\..*
+	host_regexp port vk-port-([0-9]+)\..*
 }
 
 handle @port_subdomain {
