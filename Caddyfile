@@ -1,18 +1,17 @@
-:3001 {
-	# Dynamic port forwarding: /port/<port_num>/* -> localhost:<port_num>/*
-	# Strips the /port/<port_num> prefix when proxying
-	@port_forward {
-		path_regexp port /port/([0-9]+)(/.*)?
-	}
+# Dynamic port forwarding via subdomain: port-<port_num>.* -> localhost:<port_num>
+@port_subdomain {
+	host_regexp port port-([0-9]+)\..*
+}
 
-	handle @port_forward {
-		uri strip_prefix /port/{re.port.1}
-		reverse_proxy localhost:{re.port.1} {
-			header_up Host {upstream_hostport}
-			header_up Upgrade {http.request.header.Upgrade}
-			header_up Connection {http.request.header.Connection}
-		}
+handle @port_subdomain {
+	reverse_proxy localhost:{re.port.1} {
+		header_up Host {upstream_hostport}
+		header_up Upgrade {http.request.header.Upgrade}
+		header_up Connection {http.request.header.Connection}
 	}
+}
+
+:3001 {
 
 	# Route to VSCode Server if URL has "folder" query parameter
 	@vscode_query {
