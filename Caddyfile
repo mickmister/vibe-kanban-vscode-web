@@ -8,6 +8,15 @@ handle @port_subdomain {
 		header_up Host {upstream_hostport}
 		header_up Upgrade {http.request.header.Upgrade}
 		header_up Connection {http.request.header.Connection}
+
+		@startup_error {
+			status 502 503 504
+		}
+		handle_response @startup_error {
+			root * /etc/caddy
+			rewrite * /startup.html
+			file_server
+		}
 	}
 }
 

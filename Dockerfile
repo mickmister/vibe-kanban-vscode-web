@@ -59,8 +59,9 @@ RUN mkdir -p /etc/supervisor/conf.d
 # Copy supervisord config
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
-# Copy Caddyfile
+# Copy Caddyfile and startup page
 COPY Caddyfile /etc/caddy/Caddyfile
+COPY startup.html /etc/caddy/startup.html
 
 # Copy database backup script
 COPY backup-vibe-kanban-db.sh /usr/local/bin/backup-vibe-kanban-db.sh
