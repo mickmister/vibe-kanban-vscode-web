@@ -26,9 +26,9 @@ Open:
 
 ## Dynamic port forwarding
 
-Caddy forwards `vk-port-<port>.*` subdomains to `localhost:<port>` inside the container:
+Caddy forwards `port-<port>.*` subdomains to `localhost:<port>` inside the container:
 
-- `http://vk-port-12345.localhost:${CADDY_PORT:-3001}/`
+- `http://port-12345.localhost:${CADDY_PORT:-3001}/`
 
 ## Configuration
 

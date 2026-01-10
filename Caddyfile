@@ -4,9 +4,9 @@
 }
 
 :3001 {
-	# Dynamic port forwarding via subdomain: vk-port-<port_num>.* -> localhost:<port_num>
+	# Dynamic port forwarding via subdomain: port-<port_num>.* -> localhost:<port_num>
 	# This must be checked FIRST before other handlers
-	@port_forward header_regexp port Host ^vk-port-([0-9]+)\.
+	@port_forward header_regexp port Host ^port-([0-9]+)\.
 
 	handle @port_forward {
 		reverse_proxy 127.0.0.1:{re.port.1} {
@@ -19,7 +19,7 @@
 	# Handle errors (502/503/504) for port forwarding - show startup page
 	handle_errors {
 		@port_forward_error {
-			expression {http.request.host}.startsWith("vk-port-")
+			expression {http.request.host}.startsWith("port-")
 		}
 		handle @port_forward_error {
 			root * /etc/caddy
