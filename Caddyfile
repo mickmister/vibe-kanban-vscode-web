@@ -1,10 +1,11 @@
 {
 	admin off
+	auto_https off
 }
 
 # Dynamic port forwarding via subdomain: vk-port-<port_num>.* -> localhost:<port_num>
 # Must be a separate site block to match before :3001
-vk-port-*:3001 {
+http://vk-port-*:3001 {
 	@port_match header_regexp port Host ^vk-port-([0-9]+)\.
 
 	handle @port_match {
