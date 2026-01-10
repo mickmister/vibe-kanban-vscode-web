@@ -39,3 +39,7 @@ Environment variables used by `docker-compose.yaml`:
 - `CADDY_PORT` (optional, default `3001`): host port for Caddy
 - `VIBE_KANBAN_PORT` (optional, default `3007`): host port for direct backend access (localhost-only binding)
 - `VS_CODE_PORT` (optional, default `3008`): host port for direct code-server access (localhost-only binding)
+
+## GitHub auth
+
+`gh auth login` persists because `/home/vkuser/.config/gh` is a Docker volume. Git HTTPS auth is configured in the image to use GitHub CLI credentials.
