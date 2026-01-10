@@ -5,7 +5,7 @@
 :3001 {
 	# Dynamic port forwarding via subdomain: vk-port-<port_num>.* -> localhost:<port_num>
 	@vk_port {
-		header_regexp vkport Host ^vk-port-([0-9]+)\\..*(?::\\d+)?$
+		header_regexp vkport Host ^vk-port-([0-9]+)\.
 	}
 
 	handle @vk_port {
