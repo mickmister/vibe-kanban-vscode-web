@@ -3,36 +3,34 @@
 	auto_https off
 }
 
-# Dynamic port forwarding via subdomain: vk-port-<port_num>.* -> localhost:<port_num>
-# Must be a separate site block to match before :3001
-http://vk-port-*:3001 {
-	@port_match header_regexp port Host ^vk-port-([0-9]+)\.
+:3001 {
+	# Dynamic port forwarding via subdomain: vk-port-<port_num>.* -> localhost:<port_num>
+	# This must be checked FIRST before other handlers
+	@port_forward header_regexp port Host ^vk-port-([0-9]+)\.
 
-	handle @port_match {
+	handle @port_forward {
 		reverse_proxy 127.0.0.1:{re.port.1} {
 			header_up Host {upstream_hostport}
 			header_up Upgrade {http.request.header.Upgrade}
 			header_up Connection {http.request.header.Connection}
-
-			@startup_error {
-				status 502 503 504
-			}
-			handle_response @startup_error {
-				root * /etc/caddy
-				rewrite * /startup.html
-				file_server
-			}
 		}
 	}
 
-	log {
-		output stdout
-		format console
-		level INFO
+	# Handle errors (502/503/504) for port forwarding - show startup page
+	handle_errors {
+		@port_forward_error {
+			expression {http.request.host}.startsWith("vk-port-")
+		}
+		handle @port_forward_error {
+			root * /etc/caddy
+			rewrite * /startup.html
+			file_server
+		}
+		# Default error response for other errors
+		handle {
+			respond "{err.status_code} {err.status_text}"
+		}
 	}
-}
-
-:3001 {
 	# Route to VSCode Server if URL has "folder" query parameter
 	@vscode_query {
 		query folder=*
