@@ -9,6 +9,7 @@ RUN apt-get update && apt-get install -y \
     python3 \
     supervisor \
     ca-certificates \
+    gnupg \
     debian-keyring \
     debian-archive-keyring \
     apt-transport-https \
@@ -29,6 +30,7 @@ RUN curl -fsSL https://code-server.dev/install.sh | sh
 RUN useradd -m -s /bin/bash vkuser && \
     mkdir -p /home/vkuser/.local/share/vibe-kanban \
              /home/vkuser/.local/share/pnpm \
+             /home/vkuser/.local/share/code-server \
              /home/vkuser/.config/code-server \
              /home/vkuser/.config/gh \
              /home/vkuser/.npm-global/lib \
@@ -70,9 +72,10 @@ RUN chmod +x /usr/local/bin/backup-vibe-kanban-db.sh
 # Copy default VS Code settings
 RUN mkdir -p /home/vkuser/.local/share/code-server/User
 COPY default-settings.json /home/vkuser/.local/share/code-server/User/settings.json
+RUN chown -R vkuser:vkuser /home/vkuser/.local/share/code-server
 
 # Install Claude Code extension
-RUN code-server --install-extension anthropic.claude-code
+RUN su - vkuser -c "mkdir -p /home/vkuser/.local/share/code-server/extensions && code-server --install-extension anthropic.claude-code"
 
 RUN chown -R vkuser:vkuser /home/vkuser/.local
 

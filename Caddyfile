@@ -1,26 +1,29 @@
-# Dynamic port forwarding via subdomain: vk-port-<port_num>.* -> localhost:<port_num>
-@port_subdomain {
-	host_regexp port vk-port-([0-9]+)\..*
-}
-
-handle @port_subdomain {
-	reverse_proxy localhost:{re.port.1} {
-		header_up Host {upstream_hostport}
-		header_up Upgrade {http.request.header.Upgrade}
-		header_up Connection {http.request.header.Connection}
-
-		@startup_error {
-			status 502 503 504
-		}
-		handle_response @startup_error {
-			root * /etc/caddy
-			rewrite * /startup.html
-			file_server
-		}
-	}
+{
+	admin off
 }
 
 :3001 {
+	# Dynamic port forwarding via subdomain: vk-port-<port_num>.* -> localhost:<port_num>
+	@vk_port {
+		header_regexp vkport Host ^vk-port-([0-9]+)\\..*(?::\\d+)?$
+	}
+
+	handle @vk_port {
+		reverse_proxy 127.0.0.1:{re.vkport.1} {
+			header_up Host {upstream_hostport}
+			header_up Upgrade {http.request.header.Upgrade}
+			header_up Connection {http.request.header.Connection}
+
+			@startup_error {
+				status 502 503 504
+			}
+			handle_response @startup_error {
+				root * /etc/caddy
+				rewrite * /startup.html
+				file_server
+			}
+		}
+	}
 
 	# Route to VSCode Server if URL has "folder" query parameter
 	@vscode_query {
