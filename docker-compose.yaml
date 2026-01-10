@@ -15,6 +15,8 @@ services:
       CADDY_PORT: 3001
       BACKEND_PORT: 3007 # vibe-kanban
       PORT: 3008 # vscode
+      XDG_CONFIG_HOME: /home/vkuser/.config
+      GIT_CONFIG_GLOBAL: /home/vkuser/.config/git/config
 
       PASSWORD: ${CODE_PASSWORD:?Set CODE_PASSWORD}
       SUDO_PASSWORD: ${SUDO_PASSWORD}
@@ -33,6 +35,8 @@ services:
       - claude-data:/home/vkuser/.claude
       # Persist GitHub CLI authentication
       - gh-config:/home/vkuser/.config/gh
+      # Persist Git global config (used by `gh auth setup-git`)
+      - git-config:/home/vkuser/.config/git
       # Persist npm cache (speeds up installs)
       - npm-cache:/home/vkuser/.npm
       # Persist pnpm store
@@ -45,5 +49,6 @@ volumes:
   code-server-data:
   claude-data:
   gh-config:
+  git-config:
   npm-cache:
   pnpm-store:
