@@ -2,14 +2,13 @@
 	admin off
 }
 
-:3001 {
-	# Dynamic port forwarding via subdomain: vk-port-<port_num>.* -> localhost:<port_num>
-	@vk_port {
-		header_regexp vkport Host ^vk-port-([0-9]+)\.
-	}
+# Dynamic port forwarding via subdomain: vk-port-<port_num>.* -> localhost:<port_num>
+# Must be a separate site block to match before :3001
+vk-port-*:3001 {
+	@port_match header_regexp port Host ^vk-port-([0-9]+)\.
 
-	handle @vk_port {
-		reverse_proxy 127.0.0.1:{re.vkport.1} {
+	handle @port_match {
+		reverse_proxy 127.0.0.1:{re.port.1} {
 			header_up Host {upstream_hostport}
 			header_up Upgrade {http.request.header.Upgrade}
 			header_up Connection {http.request.header.Connection}
@@ -25,6 +24,14 @@
 		}
 	}
 
+	log {
+		output stdout
+		format console
+		level INFO
+	}
+}
+
+:3001 {
 	# Route to VSCode Server if URL has "folder" query parameter
 	@vscode_query {
 		query folder=*
