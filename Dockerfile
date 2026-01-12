@@ -23,10 +23,6 @@ RUN apt-get update && apt-get install -y \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Configure Git to use GitHub CLI for HTTPS auth (persists in image; uses /home/vkuser/.config/gh/hosts.yml at runtime)
-RUN git config --system credential.helper '!gh auth git-credential' && \
-    git config --system credential.https://github.com.useHttpPath true
-
 # Install code-server using official install script
 RUN curl -fsSL https://code-server.dev/install.sh | sh
 
