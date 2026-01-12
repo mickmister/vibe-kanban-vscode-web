@@ -49,3 +49,24 @@ If you run `gh auth setup-git`, the resulting Git config is persisted via the `g
 ## Codex auth
 
 Codex caches credentials in `~/.codex/auth.json` when configured for file-based storage; this is persisted via the `codex-data` Docker volume mounted at `/home/vkuser/.codex`.
+
+## Increasing inotify limits
+
+If you're working with large projects, you may hit inotify limits (file watcher errors). These are kernel-level settings inherited from the Docker host.
+
+Check current values on the host:
+
+```bash
+cat /proc/sys/fs/inotify/max_user_watches    # default: 8192
+cat /proc/sys/fs/inotify/max_user_instances  # default: 128
+```
+
+To increase (on the Docker host, not in the container):
+
+```bash
+echo fs.inotify.max_user_watches=524288 | sudo tee -a /etc/sysctl.conf
+echo fs.inotify.max_user_instances=512 | sudo tee -a /etc/sysctl.conf
+sudo sysctl -p
+```
+
+No container restart required - changes take effect immediately.
