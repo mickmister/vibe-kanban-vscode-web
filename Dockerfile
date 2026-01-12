@@ -38,6 +38,7 @@ RUN useradd -m -s /bin/bash vkuser && \
              /home/vkuser/.config/code-server \
              /home/vkuser/.config/gh \
              /home/vkuser/.config/git \
+             /home/vkuser/.codex \
              /home/vkuser/.npm-global/lib \
              /home/vkuser/.npm \
              /home/vkuser/.cache \

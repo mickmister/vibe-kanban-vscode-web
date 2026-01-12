@@ -33,6 +33,8 @@ services:
       - code-server-data:/home/vkuser/.local/share/code-server
       # Persist Claude Code data
       - claude-data:/home/vkuser/.claude
+      # Persist Codex CLI/IDE auth cache (~/.codex/auth.json)
+      - codex-data:/home/vkuser/.codex
       # Persist GitHub CLI authentication
       - gh-config:/home/vkuser/.config/gh
       # Persist Git global config (used by `gh auth setup-git`)
@@ -50,5 +52,6 @@ volumes:
   claude-data:
   gh-config:
   git-config:
+  codex-data:
   npm-cache:
   pnpm-store:

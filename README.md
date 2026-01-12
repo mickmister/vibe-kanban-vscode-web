@@ -45,3 +45,7 @@ Environment variables used by `docker-compose.yaml`:
 `gh auth login` persists because `/home/vkuser/.config/gh` is a Docker volume. Git HTTPS auth is configured in the image to use GitHub CLI credentials.
 
 If you run `gh auth setup-git`, the resulting Git config is persisted via the `git-config` Docker volume mounted at `/home/vkuser/.config/git`.
+
+## Codex auth
+
+Codex caches credentials in `~/.codex/auth.json` when configured for file-based storage; this is persisted via the `codex-data` Docker volume mounted at `/home/vkuser/.codex`.
