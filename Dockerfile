@@ -26,8 +26,9 @@ RUN apt-get update && apt-get install -y \
 # Install code-server using official install script
 RUN curl -fsSL https://code-server.dev/install.sh | sh
 
-# Install Hugo v0.138.0
-RUN curl -L https://github.com/gohugoio/hugo/releases/download/v0.138.0/hugo_extended_0.138.0_linux-amd64.deb -o /tmp/hugo.deb \
+# Install Hugo v0.138.0 (extended version for SCSS/SASS support)
+RUN ARCH=$(dpkg --print-architecture) && \
+    curl -L "https://github.com/gohugoio/hugo/releases/download/v0.138.0/hugo_extended_0.138.0_linux-${ARCH}.deb" -o /tmp/hugo.deb \
     && dpkg -i /tmp/hugo.deb \
     && rm /tmp/hugo.deb
 
