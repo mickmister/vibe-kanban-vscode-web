@@ -26,6 +26,11 @@ RUN apt-get update && apt-get install -y \
 # Install code-server using official install script
 RUN curl -fsSL https://code-server.dev/install.sh | sh
 
+# Install Hugo v0.138.0
+RUN curl -L https://github.com/gohugoio/hugo/releases/download/v0.138.0/hugo_extended_0.138.0_linux-amd64.deb -o /tmp/hugo.deb \
+    && dpkg -i /tmp/hugo.deb \
+    && rm /tmp/hugo.deb
+
 # Create a non-root user for running applications
 RUN useradd -m -s /bin/bash vkuser && \
     mkdir -p /home/vkuser/.local/share/vibe-kanban \
