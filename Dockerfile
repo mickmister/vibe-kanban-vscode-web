@@ -85,6 +85,9 @@ RUN chown -R vkuser:vkuser /home/vkuser/.local/share/code-server
 # Install Claude Code extension
 RUN su - vkuser -c "mkdir -p /home/vkuser/.local/share/code-server/extensions && code-server --install-extension anthropic.claude-code"
 
+# Configure git to use gh as credential helper (system-level, so users only need `gh auth login`)
+RUN git config --system credential.helper '!gh auth git-credential'
+
 RUN chown -R vkuser:vkuser /home/vkuser/.local
 
 EXPOSE 3001
