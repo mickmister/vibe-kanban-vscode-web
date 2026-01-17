@@ -1,0 +1,88 @@
+{
+	admin off
+	auto_https off
+}
+
+:3001 {
+	# Dynamic port forwarding via subdomain: port-<port_num>.* -> localhost:<port_num>
+	# This must be checked FIRST before other handlers
+	@port_forward header_regexp port Host ^port-([0-9]+)\.
+
+	handle @port_forward {
+		reverse_proxy 127.0.0.1:{re.port.1} {
+			header_up Host {upstream_hostport}
+			header_up Upgrade {http.request.header.Upgrade}
+			header_up Connection {http.request.header.Connection}
+		}
+	}
+
+	# Handle errors (502/503/504) for port forwarding - show startup page
+	handle_errors {
+		@port_forward_error {
+			expression {http.request.host}.startsWith("port-")
+		}
+		handle @port_forward_error {
+			root * /etc/caddy
+			rewrite * /startup.html
+			file_server
+		}
+		# Default error response for other errors
+		handle {
+			respond "{err.status_code} {err.status_text}"
+		}
+	}
+	# Route to VSCode Server if URL has "folder" query parameter
+	@vscode_query {
+		query folder=*
+	}
+
+	# Route to VSCode Server for stable-* paths (VSCode assets)
+	@vscode_stable {
+		path /stable-*
+	}
+
+	# Route to VSCode Server for vscode-remote-resource paths
+	@vscode_remote {
+		path /vscode-remote-resource*
+	}
+
+	# VSCode Server - proxy to code-server on localhost:3008 (query param routing)
+	handle @vscode_query {
+		reverse_proxy localhost:3008 {
+			header_up Host {upstream_hostport}
+			# Handle WebSocket connections
+			header_up Upgrade {http.request.header.Upgrade}
+			header_up Connection {http.request.header.Connection}
+		}
+	}
+
+	# VSCode Server - proxy to code-server on localhost:3008 (stable-* asset routing)
+	handle @vscode_stable {
+		reverse_proxy localhost:3008 {
+			header_up Host {upstream_hostport}
+		}
+	}
+
+	# VSCode Server - proxy to code-server on localhost:3008 (vscode-remote-resource routing)
+	handle @vscode_remote {
+		reverse_proxy localhost:3008 {
+			header_up Host {upstream_hostport}
+		}
+	}
+
+	# Main application - proxy to vibe-kanban on localhost:3007 (fallback)
+	handle /* {
+		reverse_proxy localhost:3007 {
+			# Handle WebSocket connections for hot reload, etc.
+			header_up Upgrade {http.request.header.Upgrade}
+			header_up Connection {http.request.header.Connection}
+		}
+	}
+
+	# Enable logging for debugging
+	log {
+		output stdout
+		format console
+		level INFO
+	}
+}

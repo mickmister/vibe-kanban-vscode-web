@@ -1,0 +1,56 @@
+services:
+  code-vibe:
+    build:
+      context: .
+      args:
+        VIBE_KANBAN_VERSION: ${VIBE_KANBAN_VERSION:-latest}
+
+    ports:
+      - "${CADDY_PORT:-3001}:3001"         # caddy (main entry point)
+      - "127.0.0.1:${VIBE_KANBAN_PORT:-3007}:3007"   # vibe-kanban (direct access, localhost-only)
+      - "127.0.0.1:${VS_CODE_PORT:-3008}:3008"       # vscode (direct access, localhost-only)
+
+    environment:
+      VIBE_KANBAN_VERSION: ${VIBE_KANBAN_VERSION:-latest}
+      CADDY_PORT: 3001
+      BACKEND_PORT: 3007 # vibe-kanban
+      PORT: 3008 # vscode
+      XDG_CONFIG_HOME: /home/vkuser/.config
+
+      PASSWORD: ${CODE_PASSWORD:?Set CODE_PASSWORD}
+      SUDO_PASSWORD: ${SUDO_PASSWORD}
+
+    volumes:
+      # Persist git repositories
+      # - ~/repos:/home/vkuser/repos
+      - vibe-kanban-repos:/home/vkuser/repos
+      # Persist vibe-kanban database and data
+      - vibe-kanban-data:/home/vkuser/.local/share/vibe-kanban
+      # Persist worktrees
+      - vibe-kanban-worktrees:/var/tmp/vibe-kanban/worktrees
+      # Persist code-server settings (optional, but allows user customizations to persist)
+      - code-server-data:/home/vkuser/.local/share/code-server
+      # Persist Claude Code data
+      - claude-data:/home/vkuser/.claude
+      # Persist Codex CLI/IDE auth cache (~/.codex/auth.json)
+      - codex-data:/home/vkuser/.codex
+      # Persist GitHub CLI authentication
+      - gh-config:/home/vkuser/.config/gh
+      # Persist Git global config (user.name, user.email, etc.)
+      - git-config:/home/vkuser/.config/git
+      # Persist npm cache (speeds up installs)
+      - npm-cache:/home/vkuser/.npm
+      # Persist pnpm store
+      - pnpm-store:/home/vkuser/.local/share/pnpm
+
+volumes:
+  vibe-kanban-repos:
+  vibe-kanban-data:
+  vibe-kanban-worktrees:
+  code-server-data:
+  claude-data:
+  gh-config:
+  git-config:
+  codex-data:
+  npm-cache:
+  pnpm-store:
