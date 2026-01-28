@@ -2,14 +2,14 @@
 
 ## Primary Project Focus
 
-When working in the parent directory (`/var/tmp/vibe-kanban/worktrees/d14f-make-code-server/`), **this is the main project to focus on**. Avoid making changes to sibling directories unless explicitly instructed.
+When working in the parent directory (e.g. `/var/tmp/vibe-kanban/worktrees/d14f-make-code-server/`), ** vibe-kanban-vscode-web is the main project to focus on**. Avoid making changes to sibling directories unless explicitly instructed.
 
 ### Directory Structure
 
 Parent directory contains:
 - **vibe-kanban-vscode-web** ← **PRIMARY PROJECT** (this directory)
-- `vibe-kanban/` ← Legacy/reference only
-- `Vktest/` ← Testing directory, avoid unless specifically needed
+- `vibe-kanban/` ← Application this repo integrates with
+- `Vktest/` ← Legacy naming of the directory
 
 ## Working on This Project
 
@@ -45,6 +45,7 @@ Parent directory contains:
 - Supervisor: `supervisord.conf`
 - Web server: `Caddyfile`
 - Code-server settings: `default-settings.json`
+- See `README.md` for setup and usage instructions.
 
 ### Important: Idle Timeout Management
 
