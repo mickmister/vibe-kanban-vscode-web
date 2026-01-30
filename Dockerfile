@@ -91,6 +91,10 @@ RUN npm install -g @anthropic-ai/claude-code pnpm @openai/codex
 ARG VIBE_KANBAN_VERSION="latest"
 RUN npm install -g vibe-kanban@"$VIBE_KANBAN_VERSION"
 
+# Pre-install dev-manager-mcp at build time (optional, speeds up first start)
+ARG DEV_MANAGER_MCP_VERSION="latest"
+RUN npm install -g dev-manager-mcp@"$DEV_MANAGER_MCP_VERSION"
+
 # Create supervisor config directory
 RUN mkdir -p /etc/supervisor/conf.d
 
@@ -121,6 +125,7 @@ RUN chown -R vkuser:vkuser /home/vkuser/.local
 EXPOSE 3001
 EXPOSE 3007
 EXPOSE 3008
+EXPOSE 3009
 
 # default supervisord in foreground
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
