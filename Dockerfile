@@ -121,6 +121,7 @@ RUN chown -R vkuser:vkuser /home/vkuser/.local
 EXPOSE 3001
 EXPOSE 3007
 EXPOSE 3008
+EXPOSE 3009
 
 # default supervisord in foreground
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
