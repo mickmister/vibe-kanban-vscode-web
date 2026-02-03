@@ -27,7 +27,7 @@ RUN apt-get update && apt-get install -y \
 RUN mkdir -p /etc/apt/keyrings \
     && curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg \
     && chmod a+r /etc/apt/keyrings/docker.gpg \
-    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null \
+    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian bullseye stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null \
     && apt-get update \
     && apt-get install -y docker-ce-cli docker-compose-plugin \
     && apt-get clean \
@@ -88,9 +88,6 @@ RUN useradd -m -s /bin/bash vkuser && \
     chown -R vkuser:vkuser /home/vkuser && \
     chown -R vkuser:vkuser /var/tmp/vibe-kanban
 
-# Add vkuser to docker group for Docker socket access
-RUN groupadd -f docker && usermod -aG docker vkuser
-
 # Configure npm to use user-local directory for global packages
 RUN su - vkuser -c "npm config set prefix '/home/vkuser/.npm-global'"
 
@@ -118,6 +115,10 @@ COPY startup.html /etc/caddy/startup.html
 COPY backup-vibe-kanban-db.sh /usr/local/bin/backup-vibe-kanban-db.sh
 RUN chmod +x /usr/local/bin/backup-vibe-kanban-db.sh
 
+# Copy entrypoint script that fixes docker group GID at runtime
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
 # Copy default VS Code settings
 RUN mkdir -p /home/vkuser/.local/share/code-server/User
 COPY default-settings.json /home/vkuser/.local/share/code-server/User/settings.json
@@ -134,6 +135,9 @@ RUN chown -R vkuser:vkuser /home/vkuser/.local
 EXPOSE 3001
 EXPOSE 3007
 EXPOSE 3008
+
+# Use entrypoint to fix docker group GID at runtime
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 
 # default supervisord in foreground
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]

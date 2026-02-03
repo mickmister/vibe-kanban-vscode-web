@@ -67,6 +67,11 @@ The container includes Docker CLI and mounts the host's Docker socket at `/var/r
 - Images built are stored on the host system
 - This approach is more secure than true Docker-in-Docker (no privileged mode required)
 
+**How it works:**
+- The container automatically detects the GID of the mounted Docker socket at startup
+- The docker group inside the container is created/updated to match the host's docker group GID
+- This ensures `vkuser` has permission to access the socket without requiring privileged mode
+
 **Example usage:**
 ```bash
 # Check Docker is available
