@@ -5,6 +5,13 @@ services:
       args:
         VIBE_KANBAN_VERSION: ${VIBE_KANBAN_VERSION:-latest}
 
+    # Required for Tailscale
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    devices:
+      - /dev/net/tun:/dev/net/tun
+
     ports:
       - "${CADDY_PORT:-3001}:3001"         # caddy (main entry point)
       - "127.0.0.1:${VIBE_KANBAN_PORT:-3007}:3007"   # vibe-kanban (direct access, localhost-only)
@@ -19,6 +26,9 @@ services:
 
       PASSWORD: ${CODE_PASSWORD:?Set CODE_PASSWORD}
       SUDO_PASSWORD: ${SUDO_PASSWORD}
+
+      TAILSCALE_AUTHKEY: ${TAILSCALE_AUTHKEY:-}
+      TAILSCALE_HOSTNAME: ${TAILSCALE_HOSTNAME:-vkdev}
 
     volumes:
       # Persist git repositories
@@ -42,6 +52,8 @@ services:
       - npm-cache:/home/vkuser/.npm
       # Persist pnpm store
       - pnpm-store:/home/vkuser/.local/share/pnpm
+      # Persist Tailscale state (so you don't need to re-authenticate)
+      - tailscale-state:/var/lib/tailscale
 
 volumes:
   vibe-kanban-repos:
@@ -54,3 +66,4 @@ volumes:
   codex-data:
   npm-cache:
   pnpm-store:
+  tailscale-state:
