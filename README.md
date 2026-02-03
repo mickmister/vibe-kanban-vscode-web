@@ -57,6 +57,31 @@ git config --global user.email "you@example.com"
 
 Codex caches credentials in `~/.codex/auth.json` when configured for file-based storage; this is persisted via the `codex-data` Docker volume mounted at `/home/vkuser/.codex`.
 
+## Docker-in-Docker support
+
+The container includes Docker CLI and mounts the host's Docker socket at `/var/run/docker.sock`. This allows you to run Docker commands from within the VSCode environment.
+
+**What this means:**
+- You can run `docker build`, `docker run`, `docker compose`, etc. from the terminal in VSCode
+- Containers you create will run on the host's Docker daemon (not inside this container)
+- Images built are stored on the host system
+- This approach is more secure than true Docker-in-Docker (no privileged mode required)
+
+**Example usage:**
+```bash
+# Check Docker is available
+docker --version
+
+# Build and run containers
+docker build -t myapp .
+docker run -p 8080:8080 myapp
+
+# Use Docker Compose
+docker compose up -d
+```
+
+**Security note:** The mounted Docker socket gives this container the ability to create and manage containers on the host. Only use this environment in trusted contexts.
+
 ## Increasing inotify limits
 
 If you're working with large projects, you may hit inotify limits (file watcher errors). These are kernel-level settings inherited from the Docker host.

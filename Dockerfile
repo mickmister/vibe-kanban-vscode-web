@@ -23,6 +23,16 @@ RUN apt-get update && apt-get install -y \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
+# Install Docker CLI for Docker-in-Docker support (socket mounting)
+RUN mkdir -p /etc/apt/keyrings \
+    && curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg \
+    && chmod a+r /etc/apt/keyrings/docker.gpg \
+    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null \
+    && apt-get update \
+    && apt-get install -y docker-ce-cli docker-compose-plugin \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
 # Install Google Chrome and dependencies for Chrome DevTools MCP
 RUN apt-get update && apt-get install -y \
     fonts-liberation \
@@ -77,6 +87,9 @@ RUN useradd -m -s /bin/bash vkuser && \
              /var/tmp/vibe-kanban/worktrees && \
     chown -R vkuser:vkuser /home/vkuser && \
     chown -R vkuser:vkuser /var/tmp/vibe-kanban
+
+# Add vkuser to docker group for Docker socket access
+RUN groupadd -f docker && usermod -aG docker vkuser
 
 # Configure npm to use user-local directory for global packages
 RUN su - vkuser -c "npm config set prefix '/home/vkuser/.npm-global'"

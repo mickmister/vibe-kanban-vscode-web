@@ -21,6 +21,8 @@ services:
       SUDO_PASSWORD: ${SUDO_PASSWORD}
 
     volumes:
+      # Mount Docker socket for Docker-in-Docker support
+      - /var/run/docker.sock:/var/run/docker.sock
       # Persist git repositories
       # - ~/repos:/home/vkuser/repos
       - vibe-kanban-repos:/home/vkuser/repos
