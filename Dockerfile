@@ -32,6 +32,14 @@ RUN mkdir -p /etc/apt/keyrings \
     && apt-get install -y docker-ce-cli docker-compose-plugin \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
+    
+# Install Tailscale
+RUN curl -fsSL https://pkgs.tailscale.com/stable/debian/bullseye.noarmor.gpg | tee /usr/share/keyrings/tailscale-archive-keyring.gpg >/dev/null \
+    && curl -fsSL https://pkgs.tailscale.com/stable/debian/bullseye.tailscale-keyring.list | tee /etc/apt/sources.list.d/tailscale.list \
+    && apt-get update \
+    && apt-get install -y tailscale \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
 # Install Google Chrome and dependencies for Chrome DevTools MCP
 RUN apt-get update && apt-get install -y \
@@ -84,9 +92,12 @@ RUN useradd -m -s /bin/bash vkuser && \
              /home/vkuser/.cache \
              /home/vkuser/.claude \
              /home/vkuser/repos \
-             /var/tmp/vibe-kanban/worktrees && \
+             /var/tmp/vibe-kanban/worktrees \
+             /var/run/tailscale \
+             /var/lib/tailscale && \
     chown -R vkuser:vkuser /home/vkuser && \
-    chown -R vkuser:vkuser /var/tmp/vibe-kanban
+    chown -R vkuser:vkuser /var/tmp/vibe-kanban && \
+    chmod 755 /var/run/tailscale /var/lib/tailscale
 
 # Configure npm to use user-local directory for global packages
 RUN su - vkuser -c "npm config set prefix '/home/vkuser/.npm-global'"
