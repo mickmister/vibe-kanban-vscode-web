@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite';
 import { springboard } from 'springboard/vite-plugin';
+import tailwindcss from '@tailwindcss/vite';
 import path from 'node:path';
 
 const platformVariant = process.env.SPRINGBOARD_PLATFORM || '';
@@ -14,12 +15,13 @@ if (platformVariant === 'node') {
 
 export default defineConfig({
   plugins: [
+    tailwindcss(),
     springboard({
       entry: './src/index.tsx',
       platforms,
       documentMeta: {
-        title: 'My App',
-        description: 'My really cool app',
+        title: 'Vibe Kanban Workspace',
+        description: 'Workspace shell for code-server and vibe-kanban',
       },
       nodeServerPort: 1337,
     }),
