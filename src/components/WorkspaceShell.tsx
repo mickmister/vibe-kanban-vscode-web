@@ -3,210 +3,39 @@ import { Sidebar } from './Sidebar';
 import { TabBar } from './TabBar';
 import { IframePanel } from './IframePanel';
 import { AddTabModal } from './AddTabModal';
-import type {
-  WorkspaceState,
-  Space,
-  TabGroup,
-  Tab,
-  TabPair,
-} from '../types';
+import type { WorkspaceState, TabGroup } from '../types';
 
 type StateSupervisor<T> = {
   useState: () => T;
   getState: () => T;
-  setState: (val: T | ((prev: T) => T)) => void;
-  setStateImmer: (fn: (draft: T) => void) => void;
+};
+
+export type WorkspaceActions = {
+  selectSpace: (args: { spaceId: string }) => Promise<void>;
+  addSpace: (args: { name: string }) => Promise<void>;
+  deleteSpace: (args: { spaceId: string }) => Promise<void>;
+  renameSpace: (args: { spaceId: string; name: string }) => Promise<void>;
+  selectTab: (args: { tabGroupId: string; tabId: string }) => Promise<void>;
+  selectPair: (args: { tabGroupId: string; pairId: string }) => Promise<void>;
+  setActiveTabGroup: (args: { tabGroupId: string }) => Promise<void>;
+  closeTab: (args: { tabGroupId: string; tabId: string }) => Promise<void>;
+  addTab: (args: { tabGroupId: string; title: string; url: string }) => Promise<void>;
+  createPair: (args: { tabGroupId: string; tabIds: string[] }) => Promise<void>;
+  updatePairRatios: (args: { tabGroupId: string; pairId: string; ratios: number[] }) => Promise<void>;
+  reorderTabGroups: (args: { sourceId: string; targetId: string }) => Promise<void>;
+  closeActiveTab: (args: Record<string, never>) => Promise<void>;
 };
 
 interface WorkspaceShellProps {
   workspaceState: StateSupervisor<WorkspaceState>;
+  actions: WorkspaceActions;
 }
 
-export function WorkspaceShell({ workspaceState }: WorkspaceShellProps) {
+export function WorkspaceShell({ workspaceState, actions }: WorkspaceShellProps) {
   const workspace = workspaceState.useState();
   const [addTabModalOpen, setAddTabModalOpen] = useState(false);
   const [addTabTargetGroupId, setAddTabTargetGroupId] = useState<string>('');
   const dragGroupRef = useRef<string | null>(null);
-
-  // --- Space actions ---
-  const selectSpace = useCallback(
-    (spaceId: string) => {
-      workspaceState.setStateImmer((draft) => {
-        draft.activeSpaceId = spaceId;
-        const space = draft.spaces.find((s) => s.id === spaceId);
-        if (space && space.tabGroupIds.length > 0) {
-          draft.activeTabGroupId = space.tabGroupIds[0];
-        }
-      });
-    },
-    [workspaceState]
-  );
-
-  const addSpace = useCallback(
-    (name: string) => {
-      workspaceState.setStateImmer((draft) => {
-        const id = `space_${draft.nextId++}`;
-        const tgId = `tg_${draft.nextId++}`;
-        const tabId = `tab_${draft.nextId++}`;
-
-        draft.tabGroups.push({
-          id: tgId,
-          label: 'Main',
-          activeItemId: tabId,
-          tabs: [
-            {
-              id: tabId,
-              title: 'New Tab',
-              url: 'https://jamtools.dev/',
-            },
-          ],
-          pairs: [],
-          order: 0,
-        });
-
-        draft.spaces.push({
-          id,
-          name,
-          icon: 'default',
-          tabGroupIds: [tgId],
-        });
-
-        draft.activeSpaceId = id;
-        draft.activeTabGroupId = tgId;
-      });
-    },
-    [workspaceState]
-  );
-
-  const deleteSpace = useCallback(
-    (spaceId: string) => {
-      workspaceState.setStateImmer((draft) => {
-        const idx = draft.spaces.findIndex((s) => s.id === spaceId);
-        if (idx === -1 || draft.spaces.length <= 1) return;
-
-        const space = draft.spaces[idx];
-        // Remove associated tab groups
-        draft.tabGroups = draft.tabGroups.filter(
-          (tg) => !space.tabGroupIds.includes(tg.id)
-        );
-        draft.spaces.splice(idx, 1);
-
-        if (draft.activeSpaceId === spaceId) {
-          draft.activeSpaceId = draft.spaces[0].id;
-          const newSpace = draft.spaces[0];
-          draft.activeTabGroupId =
-            newSpace.tabGroupIds[0] || '';
-        }
-      });
-    },
-    [workspaceState]
-  );
-
-  const renameSpace = useCallback(
-    (spaceId: string, name: string) => {
-      workspaceState.setStateImmer((draft) => {
-        const space = draft.spaces.find((s) => s.id === spaceId);
-        if (space) space.name = name;
-      });
-    },
-    [workspaceState]
-  );
-
-  // --- Tab group actions ---
-  const selectTab = useCallback(
-    (tabGroupId: string, tabId: string) => {
-      workspaceState.setStateImmer((draft) => {
-        const tg = draft.tabGroups.find((g) => g.id === tabGroupId);
-        if (tg) tg.activeItemId = tabId;
-        draft.activeTabGroupId = tabGroupId;
-      });
-    },
-    [workspaceState]
-  );
-
-  const selectPair = useCallback(
-    (tabGroupId: string, pairId: string) => {
-      workspaceState.setStateImmer((draft) => {
-        const tg = draft.tabGroups.find((g) => g.id === tabGroupId);
-        if (tg) tg.activeItemId = pairId;
-        draft.activeTabGroupId = tabGroupId;
-      });
-    },
-    [workspaceState]
-  );
-
-  const closeTab = useCallback(
-    (tabGroupId: string, tabId: string) => {
-      workspaceState.setStateImmer((draft) => {
-        const tg = draft.tabGroups.find((g) => g.id === tabGroupId);
-        if (!tg) return;
-
-        const tab = tg.tabs.find((t) => t.id === tabId);
-        if (tab?.pinned) return;
-
-        // Remove from pairs
-        tg.pairs = tg.pairs.filter((p) => !p.tabIds.includes(tabId));
-
-        // Remove tab
-        const tabIdx = tg.tabs.findIndex((t) => t.id === tabId);
-        tg.tabs.splice(tabIdx, 1);
-
-        // Update active if needed
-        if (tg.activeItemId === tabId && tg.tabs.length > 0) {
-          tg.activeItemId = tg.tabs[Math.max(0, tabIdx - 1)].id;
-        }
-      });
-    },
-    [workspaceState]
-  );
-
-  const openAddTabModal = useCallback((tabGroupId: string) => {
-    setAddTabTargetGroupId(tabGroupId);
-    setAddTabModalOpen(true);
-  }, []);
-
-  const addTab = useCallback(
-    (title: string, url: string) => {
-      workspaceState.setStateImmer((draft) => {
-        const tg = draft.tabGroups.find(
-          (g) => g.id === addTabTargetGroupId
-        );
-        if (!tg) return;
-
-        const tabId = `tab_${draft.nextId++}`;
-        tg.tabs.push({ id: tabId, title, url });
-        tg.activeItemId = tabId;
-      });
-    },
-    [workspaceState, addTabTargetGroupId]
-  );
-
-  const createPair = useCallback(
-    (tabGroupId: string, tabIds: string[]) => {
-      workspaceState.setStateImmer((draft) => {
-        const tg = draft.tabGroups.find((g) => g.id === tabGroupId);
-        if (!tg) return;
-
-        const pairId = `pair_${draft.nextId++}`;
-        const ratios = tabIds.map(() => 1);
-        tg.pairs.push({ id: pairId, tabIds, ratios });
-        tg.activeItemId = pairId;
-      });
-    },
-    [workspaceState]
-  );
-
-  const updatePairRatios = useCallback(
-    (tabGroupId: string, pairId: string, ratios: number[]) => {
-      workspaceState.setStateImmer((draft) => {
-        const tg = draft.tabGroups.find((g) => g.id === tabGroupId);
-        if (!tg) return;
-        const pair = tg.pairs.find((p) => p.id === pairId);
-        if (pair) pair.ratios = ratios;
-      });
-    },
-    [workspaceState]
-  );
 
   // --- Drag-and-drop for tab groups ---
   const handleDragStart = useCallback(
@@ -227,25 +56,10 @@ export function WorkspaceShell({ workspaceState }: WorkspaceShellProps) {
       e.preventDefault();
       const sourceId = dragGroupRef.current;
       if (!sourceId || sourceId === targetGroupId) return;
-
-      workspaceState.setStateImmer((draft) => {
-        const space = draft.spaces.find(
-          (s) => s.id === draft.activeSpaceId
-        );
-        if (!space) return;
-
-        const ids = space.tabGroupIds;
-        const srcIdx = ids.indexOf(sourceId);
-        const tgtIdx = ids.indexOf(targetGroupId);
-        if (srcIdx === -1 || tgtIdx === -1) return;
-
-        ids.splice(srcIdx, 1);
-        ids.splice(tgtIdx, 0, sourceId);
-      });
-
+      actions.reorderTabGroups({ sourceId, targetId: targetGroupId });
       dragGroupRef.current = null;
     },
-    [workspaceState]
+    [actions]
   );
 
   // --- Cmd+W handler ---
@@ -254,43 +68,27 @@ export function WorkspaceShell({ workspaceState }: WorkspaceShellProps) {
       if ((e.metaKey || e.ctrlKey) && e.key === 'w') {
         e.preventDefault();
         e.stopPropagation();
-
-        const state = workspaceState.getState();
-        const tg = state.tabGroups.find(
-          (g) => g.id === state.activeTabGroupId
-        );
-        if (!tg) return;
-
-        // If a pair is active, deactivate it and select first tab
-        const activePair = tg.pairs.find(
-          (p) => p.id === tg.activeItemId
-        );
-        if (activePair) {
-          workspaceState.setStateImmer((draft) => {
-            const dtg = draft.tabGroups.find(
-              (g) => g.id === draft.activeTabGroupId
-            );
-            if (dtg && dtg.tabs.length > 0) {
-              dtg.activeItemId = dtg.tabs[0].id;
-            }
-          });
-          return;
-        }
-
-        // Otherwise close active tab (if not pinned)
-        const activeTab = tg.tabs.find(
-          (t) => t.id === tg.activeItemId
-        );
-        if (activeTab && !activeTab.pinned) {
-          closeTab(tg.id, activeTab.id);
-        }
+        actions.closeActiveTab({} as Record<string, never>);
       }
     };
 
     window.addEventListener('keydown', handler, { capture: true });
     return () =>
       window.removeEventListener('keydown', handler, { capture: true });
-  }, [workspaceState, closeTab]);
+  }, [actions]);
+
+  // --- Add tab modal handler ---
+  const openAddTabModal = useCallback((tabGroupId: string) => {
+    setAddTabTargetGroupId(tabGroupId);
+    setAddTabModalOpen(true);
+  }, []);
+
+  const handleAddTab = useCallback(
+    (title: string, url: string) => {
+      actions.addTab({ tabGroupId: addTabTargetGroupId, title, url });
+    },
+    [actions, addTabTargetGroupId]
+  );
 
   // --- Derived state ---
   const activeSpace = workspace.spaces.find(
@@ -306,10 +104,10 @@ export function WorkspaceShell({ workspaceState }: WorkspaceShellProps) {
     <div className="w-full h-full flex flex-col bg-neutral-950">
       <Sidebar
         workspace={workspace}
-        onSelectSpace={selectSpace}
-        onAddSpace={addSpace}
-        onDeleteSpace={deleteSpace}
-        onRenameSpace={renameSpace}
+        onSelectSpace={(spaceId) => actions.selectSpace({ spaceId })}
+        onAddSpace={(name) => actions.addSpace({ name })}
+        onDeleteSpace={(spaceId) => actions.deleteSpace({ spaceId })}
+        onRenameSpace={(spaceId, name) => actions.renameSpace({ spaceId, name })}
       />
 
       {/* Main content area */}
@@ -324,30 +122,20 @@ export function WorkspaceShell({ workspaceState }: WorkspaceShellProps) {
           activeTabGroups.map((tg) => (
             <div
               key={tg.id}
-              className={`flex flex-col min-h-0 ${
-                activeTabGroups.length > 1 ? 'flex-1' : 'flex-1'
-              } ${
+              className={`flex flex-col min-h-0 flex-1 ${
                 workspace.activeTabGroupId === tg.id
                   ? 'ring-1 ring-primary-500/30'
                   : ''
               }`}
-              onClick={() => {
-                workspaceState.setStateImmer((draft) => {
-                  draft.activeTabGroupId = tg.id;
-                });
-              }}
+              onClick={() => actions.setActiveTabGroup({ tabGroupId: tg.id })}
             >
               <TabBar
                 tabGroup={tg}
-                onSelectTab={(tabId) => selectTab(tg.id, tabId)}
-                onSelectPair={(pairId) =>
-                  selectPair(tg.id, pairId)
-                }
-                onCloseTab={(tabId) => closeTab(tg.id, tabId)}
+                onSelectTab={(tabId) => actions.selectTab({ tabGroupId: tg.id, tabId })}
+                onSelectPair={(pairId) => actions.selectPair({ tabGroupId: tg.id, pairId })}
+                onCloseTab={(tabId) => actions.closeTab({ tabGroupId: tg.id, tabId })}
                 onAddTab={() => openAddTabModal(tg.id)}
-                onCreatePair={(tabIds) =>
-                  createPair(tg.id, tabIds)
-                }
+                onCreatePair={(tabIds) => actions.createPair({ tabGroupId: tg.id, tabIds })}
                 onDragStart={handleDragStart}
                 onDragOver={handleDragOver}
                 onDrop={handleDrop}
@@ -355,7 +143,7 @@ export function WorkspaceShell({ workspaceState }: WorkspaceShellProps) {
               <IframePanel
                 tabGroup={tg}
                 onUpdatePairRatios={(pairId, ratios) =>
-                  updatePairRatios(tg.id, pairId, ratios)
+                  actions.updatePairRatios({ tabGroupId: tg.id, pairId, ratios })
                 }
               />
             </div>
@@ -366,7 +154,7 @@ export function WorkspaceShell({ workspaceState }: WorkspaceShellProps) {
       <AddTabModal
         isOpen={addTabModalOpen}
         onClose={() => setAddTabModalOpen(false)}
-        onAdd={addTab}
+        onAdd={handleAddTab}
       />
     </div>
   );
