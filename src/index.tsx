@@ -30,7 +30,7 @@ springboard.registerModule('workspace', {}, async (moduleAPI) => {
     return (
       <>
         {/* <ManifestLink /> */}
-        <div className="dark w-full h-full">
+        <div className="dark w-screen h-screen fixed inset-0">
           <WorkspaceShell workspaceState={workspaceState} />
         </div>
       </>
