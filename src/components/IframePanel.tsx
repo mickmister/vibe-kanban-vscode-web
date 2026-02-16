@@ -12,8 +12,9 @@ function IframeView({ tab }: { tab: Tab }) {
       src={tab.url}
       title={tab.title}
       className="w-full h-full border-0"
-      allow="clipboard-read; clipboard-write; cross-origin-isolated"
-      sandbox="allow-same-origin allow-scripts allow-popups allow-forms allow-modals allow-downloads"
+      sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals"
+      allow="clipboard-read; clipboard-write; fullscreen"
+      role="region"
     />
   );
 }
