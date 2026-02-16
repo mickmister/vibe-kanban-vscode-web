@@ -7,7 +7,10 @@ import { WorkspaceShell } from './components/WorkspaceShell';
 import { createDefaultWorkspace } from './types';
 import type { WorkspaceState } from './types';
 
-springboard.registerModule('workspace', {rpcMode: 'local'}, async (moduleAPI) => {
+console.log('outside of module')
+springboard.registerModule('workspace', {rpcMode: 'remote'}, async (moduleAPI) => {
+  console.log('inside of module')
+
   const workspaceState = await moduleAPI.statesAPI.createPersistentState<WorkspaceState>(
     'workspace',
     createDefaultWorkspace()
