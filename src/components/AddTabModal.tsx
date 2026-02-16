@@ -17,23 +17,25 @@ interface AddTabModalProps {
   onAdd: (title: string, url: string) => void;
 }
 
+const ORIGIN = 'https://jamtools.dev';
+
 const PRESETS = [
   {
     key: 'code',
     title: 'Code Server',
-    url: '/?folder=/home/vkuser/repos',
+    url: `${ORIGIN}/?folder=/home/vkuser/repos`,
     description: 'VS Code editor',
   },
   {
     key: 'kanban',
     title: 'Vibe Kanban',
-    url: '/',
+    url: `${ORIGIN}/`,
     description: 'Kanban board (default route)',
   },
   {
     key: 'kanban-chat',
     title: 'Kanban Chat',
-    url: '/workspaces/',
+    url: `${ORIGIN}/workspaces/`,
     description: 'Vibe Kanban workspace chat',
   },
   {

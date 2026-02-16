@@ -57,7 +57,7 @@ export function WorkspaceShell({ workspaceState }: WorkspaceShellProps) {
             {
               id: tabId,
               title: 'New Tab',
-              url: '/',
+              url: 'https://jamtools.dev/',
             },
           ],
           pairs: [],

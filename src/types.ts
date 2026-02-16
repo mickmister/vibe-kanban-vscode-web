@@ -68,13 +68,13 @@ export function createDefaultWorkspace(): WorkspaceState {
           {
             id: 'tab_1',
             title: 'Code',
-            url: '/?folder=/home/vkuser/repos',
+            url: 'https://jamtools.dev/?folder=/home/vkuser/repos',
             pinned: true,
           },
           {
             id: 'tab_2',
             title: 'Kanban',
-            url: '/',
+            url: 'https://jamtools.dev/',
             pinned: false,
           },
         ],
