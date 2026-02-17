@@ -65,7 +65,7 @@ These are **expected** because we deliberately strip the `vk-billing` feature fo
    cd vkcloud
    cp .env.vkcloud.example .env.vkcloud
    # Edit .env.vkcloud with GitHub OAuth credentials
-   docker-compose -f docker-compose.vkcloud.yaml up -d
+   docker-compose -f docker-compose.yaml up -d
    ```
 
 2. **Tag and publish** (optional):

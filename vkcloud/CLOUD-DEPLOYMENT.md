@@ -71,7 +71,7 @@ REMOTE_SERVER_PORTS=127.0.0.1:3000:8081
 ### 3. Start the Cloud Stack
 
 ```bash
-docker-compose -f docker-compose.vkcloud.yaml up -d
+docker-compose up -d
 ```
 
 First startup will:
@@ -83,7 +83,7 @@ First startup will:
 
 Monitor progress:
 ```bash
-docker-compose -f docker-compose.vkcloud.yaml logs -f vk-remote
+docker-compose logs -f vk-remote
 ```
 
 ### 4. Verify Deployment
@@ -173,7 +173,7 @@ docker volume inspect vk-azurite-data
 ```bash
 #!/bin/bash
 # Backup VK Cloud data
-docker-compose -f docker-compose.vkcloud.yaml exec -T vk-postgres \
+docker-compose exec -T vk-postgres \
   pg_dump -U remote remote > backup-$(date +%Y%m%d).sql
 
 docker run --rm \
@@ -303,7 +303,7 @@ Each team member runs their own local VK container (vibe-kanban-vscode-web) and 
 
 **Check logs**:
 ```bash
-docker-compose -f docker-compose.vkcloud.yaml logs vk-remote
+docker-compose logs vk-remote
 ```
 
 **Common issues**:
@@ -320,7 +320,7 @@ ElectricSQL requires:
 
 **Check**:
 ```bash
-docker-compose -f docker-compose.vkcloud.yaml logs vk-electric
+docker-compose logs vk-electric
 ```
 
 ### OAuth redirect fails
@@ -365,7 +365,7 @@ docker-compose exec vibe-kanban-vscode-web env | grep VK_CLOUD_URL
 curl http://localhost:3000/health
 
 # PostgreSQL
-docker-compose -f docker-compose.vkcloud.yaml exec vk-postgres pg_isready
+docker-compose exec vk-postgres pg_isready
 
 # ElectricSQL
 curl http://localhost:3000/api/electric/health  # proxied through remote server
@@ -375,22 +375,22 @@ curl http://localhost:3000/api/electric/health  # proxied through remote server
 
 ```bash
 # All services
-docker-compose -f docker-compose.vkcloud.yaml logs -f
+docker-compose logs -f
 
 # Specific service
-docker-compose -f docker-compose.vkcloud.yaml logs -f vk-remote
-docker-compose -f docker-compose.vkcloud.yaml logs -f vk-postgres
-docker-compose -f docker-compose.vkcloud.yaml logs -f vk-electric
+docker-compose logs -f vk-remote
+docker-compose logs -f vk-postgres
+docker-compose logs -f vk-electric
 ```
 
 ### Database Access
 
 ```bash
 # Connect to PostgreSQL
-docker-compose -f docker-compose.vkcloud.yaml exec vk-postgres psql -U remote -d remote
+docker-compose exec vk-postgres psql -U remote -d remote
 
 # Run SQL query
-docker-compose -f docker-compose.vkcloud.yaml exec vk-postgres \
+docker-compose exec vk-postgres \
   psql -U remote -d remote -c "SELECT * FROM users;"
 ```
 
@@ -398,13 +398,13 @@ docker-compose -f docker-compose.vkcloud.yaml exec vk-postgres \
 
 ```bash
 # Pull latest changes (if using git clone in Dockerfile)
-docker-compose -f docker-compose.vkcloud.yaml build --no-cache vk-remote
+docker-compose build --no-cache vk-remote
 
 # Or update VKTEST_BRANCH in .env.vkcloud
 VKTEST_BRANCH=v2.0.0
 
 # Rebuild and restart
-docker-compose -f docker-compose.vkcloud.yaml up -d --build vk-remote
+docker-compose up -d --build vk-remote
 ```
 
 ---
