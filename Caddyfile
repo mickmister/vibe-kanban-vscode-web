@@ -72,6 +72,9 @@
 
 	# Main application - proxy to vibe-kanban on localhost:3007 (fallback)
 	handle /* {
+		# Rewrite VK cloud API URLs in JavaScript responses
+		vk_rewrite
+
 		reverse_proxy localhost:3007 {
 			# Handle WebSocket connections for hot reload, etc.
 			header_up Upgrade {http.request.header.Upgrade}

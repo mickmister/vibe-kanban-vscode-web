@@ -1,5 +1,5 @@
-// Package vibekanbanplugins implements a Caddy HTTP handler that injects
-// plugin system code into Vibe Kanban responses.
+// Package vibekanbanplugins implements a Caddy HTTP handler that rewrites
+// Vibe Kanban API URLs in JavaScript responses to point to a custom cloud instance.
 package vibekanbanplugins
 
 import (
@@ -12,24 +12,25 @@ import (
 	"strings"
 
 	"github.com/caddyserver/caddy/v2"
+	"github.com/caddyserver/caddy/v2/caddyconfig/caddyfile"
+	"github.com/caddyserver/caddy/v2/caddyconfig/httpcaddyfile"
 	"github.com/caddyserver/caddy/v2/modules/caddyhttp"
 	"go.uber.org/zap"
 )
 
 func init() {
 	caddy.RegisterModule(PluginInjector{})
+	httpcaddyfile.RegisterHandlerDirective("vk_rewrite", parseCaddyfile)
+	httpcaddyfile.RegisterDirectiveOrder("vk_rewrite", "before", "reverse_proxy")
 }
 
-// PluginInjector injects plugin system code into HTML responses.
+// PluginInjector rewrites Vibe Kanban API URLs in JavaScript responses.
 type PluginInjector struct {
-	// InjectionScriptPath is the path to a JavaScript file to load at startup (optional)
-	InjectionScriptPath string `json:"injection_script_path,omitempty"`
+	// CloudURL is the URL of the self-hosted VK cloud instance (reads from env if not set)
+	CloudURL string `json:"cloud_url,omitempty"`
 
-	// InjectionScript is direct JavaScript content to inject (takes precedence over path)
-	InjectionScript string `json:"injection_script,omitempty"`
-
-	// cachedScript is the loaded script content (loaded during provision)
-	cachedScript string
+	// resolvedCloudURL is the final URL after env var resolution
+	resolvedCloudURL string
 
 	logger *zap.Logger
 }
@@ -37,44 +38,46 @@ type PluginInjector struct {
 // CaddyModule returns the Caddy module information.
 func (PluginInjector) CaddyModule() caddy.ModuleInfo {
 	return caddy.ModuleInfo{
-		ID:  "http.handlers.vibe_kanban_plugin_injector",
+		ID:  "http.handlers.vibe_kanban_rewriter",
 		New: func() caddy.Module { return new(PluginInjector) },
 	}
 }
 
-// getEmbeddedScript returns the default embedded injection script.
-func getEmbeddedScript() string {
-	return `// Vibe Kanban Plugin System
-console.log('[Vibe Kanban] Plugin system initialized');
-window.__VIBE_KANBAN_PLUGINS__ = {
-  version: '1.0.0',
-  timestamp: Date.now(),
-  injectedBy: 'caddy-plugin-injector'
-};`
+// parseCaddyfile sets up the handler from Caddyfile tokens.
+// Syntax: vk_rewrite [<cloud_url>]
+// If cloud_url is not provided, reads from VK_CLOUD_URL env var.
+func parseCaddyfile(h httpcaddyfile.Helper) (caddyhttp.MiddlewareHandler, error) {
+	var p PluginInjector
+
+	// Optional: read cloud URL from directive argument
+	for h.Next() {
+		args := h.RemainingArgs()
+		if len(args) > 1 {
+			return nil, h.ArgErr()
+		}
+		if len(args) == 1 {
+			p.CloudURL = args[0]
+		}
+	}
+
+	return &p, nil
 }
 
 // Provision implements caddy.Provisioner.
 func (p *PluginInjector) Provision(ctx caddy.Context) error {
 	p.logger = ctx.Logger(p)
 
-	// Priority: direct content > file path > embedded default
-	if p.InjectionScript != "" {
-		p.cachedScript = p.InjectionScript
-		p.logger.Info("using direct injection script",
-			zap.Int("size", len(p.cachedScript)))
-	} else if p.InjectionScriptPath != "" {
-		data, err := os.ReadFile(p.InjectionScriptPath)
-		if err != nil {
-			return fmt.Errorf("failed to read injection script from %s: %w", p.InjectionScriptPath, err)
-		}
-		p.cachedScript = string(data)
-		p.logger.Info("loaded injection script from file",
-			zap.String("path", p.InjectionScriptPath),
-			zap.Int("size", len(p.cachedScript)))
+	// Resolve cloud URL: explicit config > VK_CLOUD_URL env > error
+	if p.CloudURL != "" {
+		p.resolvedCloudURL = p.CloudURL
+		p.logger.Info("using configured cloud URL",
+			zap.String("url", p.resolvedCloudURL))
+	} else if envURL := os.Getenv("VK_CLOUD_URL"); envURL != "" {
+		p.resolvedCloudURL = envURL
+		p.logger.Info("using cloud URL from VK_CLOUD_URL env var",
+			zap.String("url", p.resolvedCloudURL))
 	} else {
-		p.cachedScript = getEmbeddedScript()
-		p.logger.Info("using embedded default injection script",
-			zap.Int("size", len(p.cachedScript)))
+		return fmt.Errorf("vk_rewrite: no cloud URL configured (set VK_CLOUD_URL env var or pass as directive argument)")
 	}
 
 	return nil
@@ -226,9 +229,9 @@ func (p *PluginInjector) shouldWriteResponseBody(method string, statusCode int) 
 	return true
 }
 
-// processResponse checks if the response is HTML and injects the script if needed.
+// processResponse checks if the response is JavaScript and rewrites API URLs if needed.
 func (p *PluginInjector) processResponse(headers http.Header, body []byte) []byte {
-	// Skip injection if response is compressed (would corrupt the output)
+	// Skip rewrite if response is compressed (would corrupt the output)
 	contentEncoding := headers.Get("Content-Encoding")
 	if contentEncoding != "" {
 		return body
@@ -237,54 +240,41 @@ func (p *PluginInjector) processResponse(headers http.Header, body []byte) []byt
 	// Check Content-Type header (case-insensitive)
 	contentType := headers.Get("Content-Type")
 
-	// Only process text/html responses
-	if !strings.Contains(strings.ToLower(contentType), "text/html") {
+	// Only process JavaScript responses
+	// Common content types: application/javascript, text/javascript, application/x-javascript
+	contentTypeLower := strings.ToLower(contentType)
+	if !strings.Contains(contentTypeLower, "javascript") {
 		return body
 	}
 
-	// Inject script into HTML
-	return p.injectIntoHTML(body)
+	// Rewrite API URLs in JavaScript
+	return p.rewriteJavaScript(body)
 }
 
-// injectIntoHTML injects the plugin script before the </body> tag.
-func (p *PluginInjector) injectIntoHTML(html []byte) []byte {
-	// Use the cached script loaded during provision
-	if p.cachedScript == "" {
-		if p.logger != nil {
-			p.logger.Warn("no cached script available, skipping injection")
-		}
-		return html
+// rewriteJavaScript replaces the official VK cloud API URL with the custom one.
+func (p *PluginInjector) rewriteJavaScript(js []byte) []byte {
+	// The official VK cloud API URL that appears in the npm package bundle
+	officialURL := []byte("https://api.vibekanban.com")
+	customURL := []byte(p.resolvedCloudURL)
+
+	// Count occurrences for logging
+	count := bytes.Count(js, officialURL)
+	if count == 0 {
+		// No rewrites needed
+		return js
 	}
 
-	// Wrap script in <script> tags
-	var injectionScript bytes.Buffer
-	injectionScript.WriteString("<script>\n")
-	injectionScript.WriteString(p.cachedScript)
-	injectionScript.WriteString("\n</script>\n")
-
-	// Find </body> tag (case-insensitive)
-	bodyCloseTag := []byte("</body>")
-	bodyIndex := bytes.Index(bytes.ToLower(html), bytes.ToLower(bodyCloseTag))
-
-	// If </body> not found, just return the original HTML
-	if bodyIndex == -1 {
-		if p.logger != nil {
-			p.logger.Debug("no </body> tag found, skipping injection")
-		}
-		return html
-	}
-
-	// Build the modified HTML
-	var result bytes.Buffer
-	result.Write(html[:bodyIndex])        // Everything before </body>
-	result.Write(injectionScript.Bytes()) // Injected script
-	result.Write(html[bodyIndex:])        // </body> and everything after
+	// Replace all occurrences
+	rewritten := bytes.ReplaceAll(js, officialURL, customURL)
 
 	if p.logger != nil {
-		p.logger.Debug("injected plugin script into HTML")
+		p.logger.Debug("rewrote VK cloud API URLs in JavaScript",
+			zap.Int("replacements", count),
+			zap.String("from", string(officialURL)),
+			zap.String("to", p.resolvedCloudURL))
 	}
 
-	return result.Bytes()
+	return rewritten
 }
 
 // Interface guards - ensure we implement required interfaces

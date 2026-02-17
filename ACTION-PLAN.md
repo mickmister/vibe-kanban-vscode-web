@@ -27,6 +27,18 @@ One self-hosted cloud instance (remote server) with multiple vscode-web containe
   └─────────┘    └─────────┘    └─────────┘
 ```
 
+## Implementation Status
+
+- ✅ Caddy module updated to intercept `.js` responses and replace `https://api.vibekanban.com` with custom URL
+- ✅ Caddyfile directive `vk_rewrite` registered for easy configuration
+- ✅ Dockerfile updated to build custom Caddy binary with `xcaddy`
+- ✅ Caddyfile updated to use `vk_rewrite` directive
+- ✅ supervisord.conf updated with `VK_SHARED_API_BASE` env var for VK backend
+- ✅ docker-compose.yaml updated with `VK_CLOUD_URL` passthrough
+- ✅ .env.example updated with cloud connection documentation
+
+**Ready to test**: Build the Docker image and connect to a cloud instance.
+
 ## Tasks
 
 ### 1. Build & publish the remote server Docker image
@@ -58,42 +70,38 @@ LOOPS_EMAIL_API_KEY=              # empty string = emails disabled but server ru
 
 **GitHub OAuth App callback:** `https://vk-cloud.example.com/v1/oauth/github/callback`
 
-### 3. Caddy MITM rewrite in vscode-web containers
+### 3. Caddy JS rewrite in vscode-web containers
 
-Add a `response_body` replacement in the vscode-web Caddyfile to inject `VITE_VK_SHARED_API_BASE` into the local VK frontend JS at proxy time. This avoids any source build.
+**Implemented**: Custom Caddy module intercepts JavaScript responses and performs literal string replacement.
 
-The local frontend's `remoteApi.ts` compiles to something like:
-```js
-const REMOTE_API_URL = "" || "";
+**How it works:**
+- The vibe-kanban npm package bundles `https://api.vibekanban.com` as a literal string in the JS
+- Our `vk_rewrite` Caddy directive intercepts all `.js` responses
+- Replaces `https://api.vibekanban.com` with the URL from `VK_CLOUD_URL` env var
+- Zero source builds required, works with any npx version
+
+**Implementation:**
+```go
+// handler.go intercepts JavaScript responses
+func (p *PluginInjector) processResponse(headers http.Header, body []byte) []byte {
+    // Only process JavaScript files
+    if !strings.Contains(strings.ToLower(contentType), "javascript") {
+        return body
+    }
+    // Replace official URL with custom cloud URL
+    return bytes.ReplaceAll(body,
+        []byte("https://api.vibekanban.com"),
+        []byte(p.resolvedCloudURL))
+}
 ```
 
-Caddy can rewrite responses from the local VK server to inject the cloud URL:
-
+**Caddyfile usage:**
 ```caddyfile
 handle /* {
-    reverse_proxy localhost:3007 {
-        header_up Upgrade {http.request.header.Upgrade}
-        header_up Connection {http.request.header.Connection}
-    }
-    # Rewrite JS responses to inject cloud API URL
-    @js_response header Content-Type *javascript*
-    response_body @js_response {
-        search_regexp `(REMOTE_API_URL\s*=\s*)""`
-        replace         `$1"{$VK_CLOUD_URL}"`
-    }
+    vk_rewrite  # Reads VK_CLOUD_URL env var
+    reverse_proxy localhost:3007 {...}
 }
 ```
-
-**Alternative approach** if the bundled string is harder to match: use `replace` directive to do a simple string substitution on all JS responses:
-
-```caddyfile
-response_body @js_response {
-    search  `import.meta.env.VITE_VK_SHARED_API_BASE||""`
-    replace `"https://vk-cloud.example.com"`
-}
-```
-
-> **Note:** `response_body` requires the `replace-response` Caddy module. Either build a custom Caddy binary or use `caddy-docker` with the module. Alternatively, use a simple init script that does `sed` on the cached VK frontend assets before Caddy starts.
 
 ### 4. Add `VK_SHARED_API_BASE` to local VK environment
 
@@ -124,12 +132,14 @@ The Vite build likely tree-shakes `import.meta.env.VITE_VK_SHARED_API_BASE` into
 
 ### 6. Summary of changes to vscode-web
 
-| File | Change |
-|------|--------|
-| `docker-compose.yaml` | Add `VK_CLOUD_URL` env var |
-| `supervisord.conf` | Add `VK_SHARED_API_BASE` to vibe-kanban environment |
-| `Caddyfile` | Add response body rewrite for JS to inject cloud URL |
-| `Dockerfile` | Install Caddy with `replace-response` module (or use sed fallback) |
+| File | Status | Change |
+|------|--------|--------|
+| `caddy-module/handler.go` | ✅ | Updated to intercept JS, replace API URLs, register Caddyfile directive |
+| `docker-compose.yaml` | ✅ | Added `VK_CLOUD_URL` env var passthrough |
+| `supervisord.conf` | ✅ | Added `VK_SHARED_API_BASE` to vibe-kanban environment, `VK_CLOUD_URL` to Caddy |
+| `Caddyfile` | ✅ | Added `vk_rewrite` directive before reverse_proxy |
+| `Dockerfile` | ✅ | Replaced standard Caddy install with xcaddy build of custom module |
+| `.env.example` | ✅ | Added VK_CLOUD_URL documentation |
 
 ### 7. Order of operations
 

@@ -30,6 +30,9 @@ services:
       TAILSCALE_AUTHKEY: ${TAILSCALE_AUTHKEY:-}
       TAILSCALE_HOSTNAME: ${TAILSCALE_HOSTNAME:-vkdev}
 
+      # VK Cloud connection (optional - if set, local VK connects to this cloud instance)
+      VK_CLOUD_URL: ${VK_CLOUD_URL:-}
+
     volumes:
       # Persist git repositories
       # - ~/repos:/home/vkuser/repos

@@ -1,6 +1,6 @@
 FROM node:20-bullseye
 
-# Install development tools, supervisor, Caddy, and GitHub CLI
+# Install development tools, supervisor, Go (for xcaddy), and GitHub CLI
 RUN apt-get update && apt-get install -y \
     curl \
     wget \
@@ -13,15 +13,35 @@ RUN apt-get update && apt-get install -y \
     debian-keyring \
     debian-archive-keyring \
     apt-transport-https \
-    && curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg \
-    && curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' | tee /etc/apt/sources.list.d/caddy-stable.list \
     && curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg \
     && chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg \
     && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
     && apt-get update \
-    && apt-get install -y caddy gh \
+    && apt-get install -y gh \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
+
+# Install Go (required for building Caddy with xcaddy)
+RUN wget https://go.dev/dl/go1.23.5.linux-amd64.tar.gz \
+    && tar -C /usr/local -xzf go1.23.5.linux-amd64.tar.gz \
+    && rm go1.23.5.linux-amd64.tar.gz
+ENV PATH="/usr/local/go/bin:${PATH}"
+
+# Install xcaddy (Caddy build tool)
+RUN go install github.com/caddyserver/xcaddy/cmd/xcaddy@latest
+ENV PATH="/root/go/bin:${PATH}"
+
+# Copy Caddy module source
+COPY caddy-module /tmp/caddy-module
+
+# Build custom Caddy with vibe-kanban rewrite module
+RUN cd /tmp/caddy-module \
+    && xcaddy build \
+        --with github.com/yourusername/vibe-kanban-plugins=. \
+    && mv caddy /usr/bin/caddy \
+    && chmod +x /usr/bin/caddy \
+    && cd / \
+    && rm -rf /tmp/caddy-module
 
 # Install Tailscale
 RUN curl -fsSL https://pkgs.tailscale.com/stable/debian/bullseye.noarmor.gpg | tee /usr/share/keyrings/tailscale-archive-keyring.gpg >/dev/null \
