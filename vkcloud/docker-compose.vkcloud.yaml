@@ -52,7 +52,7 @@ services:
   # Azurite (Azure Blob Storage emulator for file attachments)
   # --------------------------------------------------------------------------
   vk-azurite:
-    image: mcr.microsoft.com/azure-storage/azurite:latest
+    image: mcr.microsoft.com/azure-storage/azurite:3.35.0
     container_name: vk-azurite
     command: "azurite-blob --blobHost 0.0.0.0 --blobPort 10000 --loose --skipApiVersionCheck"
     ports:
@@ -71,7 +71,7 @@ services:
   # Azurite Initialization (create container and configure CORS)
   # --------------------------------------------------------------------------
   vk-azurite-init:
-    image: mcr.microsoft.com/azure-cli:latest
+    image: mcr.microsoft.com/azure-cli:2.83.0
     container_name: vk-azurite-init
     depends_on:
       vk-azurite:

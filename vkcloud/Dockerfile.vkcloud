@@ -9,7 +9,6 @@
 
 ARG VKTEST_REPO_URL=https://github.com/BloopAI/vibe-kanban.git
 ARG VKTEST_BRANCH=main
-ARG APP_NAME=remote
 ARG FEATURES=""
 
 # ============================================================================
@@ -53,7 +52,6 @@ RUN pnpm -C remote-frontend build
 # ============================================================================
 FROM rust:1.93-slim-bookworm AS builder
 
-ARG APP_NAME
 ARG FEATURES
 ARG POSTHOG_API_KEY=""
 ARG POSTHOG_API_ENDPOINT=""
@@ -94,14 +92,12 @@ RUN --mount=type=cache,target=/usr/local/cargo/registry \
     --mount=type=cache,target=/usr/local/cargo/git \
     --mount=type=cache,target=/app/target \
     cargo build ${FEATURES:+--locked} --release --manifest-path crates/remote/Cargo.toml ${FEATURES:+--features ${FEATURES}} \
- && cp crates/remote/target/release/${APP_NAME} /app/bin/${APP_NAME}
+ && cp crates/remote/target/release/remote /app/bin/remote
 
 # ============================================================================
 # Stage 4: Runtime image
 # ============================================================================
 FROM debian:bookworm-slim AS runtime
-
-ARG APP_NAME
 
 RUN apt-get update \
   && apt-get install -y --no-install-recommends ca-certificates libssl3 wget \
@@ -111,7 +107,7 @@ RUN apt-get update \
 WORKDIR /srv
 
 # Copy binary and static frontend assets
-COPY --from=builder /app/bin/${APP_NAME} /usr/local/bin/${APP_NAME}
+COPY --from=builder /app/bin/remote /usr/local/bin/remote
 COPY --from=fe-builder /repo/remote-frontend/dist /srv/static
 
 USER appuser

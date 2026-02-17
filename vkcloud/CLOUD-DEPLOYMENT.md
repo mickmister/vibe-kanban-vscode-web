@@ -38,7 +38,7 @@ This guide covers deploying your own Vibe Kanban Cloud instance to connect multi
 ### 1. Configure Environment
 
 ```bash
-cd vibe-kanban-vscode-web
+cd vibe-kanban-vscode-web/vkcloud
 cp .env.vkcloud.example .env.vkcloud
 ```
 
@@ -189,7 +189,7 @@ docker run --rm \
 ### Build Standalone Image
 
 ```bash
-cd vibe-kanban-vscode-web
+cd vibe-kanban-vscode-web/vkcloud
 
 # Build the image
 docker build \
