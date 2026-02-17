@@ -75,7 +75,7 @@ docker-compose -f docker-compose.vkcloud.yaml up -d
 ```
 
 First startup will:
-- Clone the Vktest repository
+- Clone the vibe-kanban repository
 - Build the Rust backend (~5-10 minutes)
 - Build the React frontend (~2-3 minutes)
 - Start PostgreSQL, ElectricSQL, Azurite
@@ -229,13 +229,13 @@ vk-remote:
 
 ## Customization
 
-### Use Your Fork of Vktest
+### Use Your Fork of vibe-kanban
 
-If you've forked the Vktest repository and made changes:
+If you've forked the vibe-kanban repository and made changes:
 
 **In `.env.vkcloud`**:
 ```bash
-VKTEST_REPO_URL=https://github.com/your-org/Vktest.git
+VKTEST_REPO_URL=https://github.com/your-org/vibe-kanban.git
 VKTEST_BRANCH=your-custom-branch
 ```
 
@@ -243,7 +243,7 @@ VKTEST_BRANCH=your-custom-branch
 ```bash
 docker build \
   -f Dockerfile.vkcloud \
-  --build-arg VKTEST_REPO_URL=https://github.com/your-org/Vktest.git \
+  --build-arg VKTEST_REPO_URL=https://github.com/your-org/vibe-kanban.git \
   --build-arg VKTEST_BRANCH=custom-features \
   -t vk-cloud:custom \
   .
@@ -445,5 +445,5 @@ Check https://vibekanban.com/pricing for current pricing.
 
 - **Documentation**: See [CLOUD-DEPLOYMENT-RESEARCH.md](CLOUD-DEPLOYMENT-RESEARCH.md) for detailed architecture notes
 - **Implementation**: See [IMPLEMENTATION-SUMMARY.md](IMPLEMENTATION-SUMMARY.md) for Caddy URL rewriting setup
-- **Issues**: https://github.com/vibe-teams/Vktest/issues
+- **Issues**: https://github.com/BloopAI/BloopAI/vibe-kanban/issues
 - **License**: Apache 2.0 (self-hosting is fully supported)

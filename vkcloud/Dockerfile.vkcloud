@@ -7,7 +7,7 @@
 # Run: Use docker-compose.vkcloud.yaml for full stack deployment
 #
 
-ARG VKTEST_REPO_URL=https://github.com/vibe-teams/Vktest.git
+ARG VKTEST_REPO_URL=https://github.com/BloopAI/vibe-kanban.git
 ARG VKTEST_BRANCH=main
 ARG APP_NAME=remote
 ARG FEATURES=""

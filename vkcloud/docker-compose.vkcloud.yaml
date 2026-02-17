@@ -97,7 +97,7 @@ services:
       context: .
       dockerfile: Dockerfile.vkcloud
       args:
-        VKTEST_REPO_URL: ${VKTEST_REPO_URL:-https://github.com/vibe-teams/Vktest.git}
+        VKTEST_REPO_URL: ${VKTEST_REPO_URL:-https://github.com/BloopAI/vibe-kanban.git}
         VKTEST_BRANCH: ${VKTEST_BRANCH:-main}
         FEATURES: ${FEATURES:-}
         POSTHOG_API_KEY: ${POSTHOG_API_KEY:-}
