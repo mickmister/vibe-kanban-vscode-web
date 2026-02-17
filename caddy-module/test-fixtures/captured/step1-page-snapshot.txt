@@ -1,0 +1,85 @@
+uid=1_0 RootWebArea "vibe-kanban" url="http://127.0.0.1:59728/"
+  uid=1_1 link url="http://127.0.0.1:59728/projects"
+  uid=1_2 link "Join our Discord" url="https://discord.gg/AC4nwVtJM3"
+    uid=1_3 StaticText "93 online"
+  uid=1_4 link "Settings" url="http://127.0.0.1:59728/settings"
+  uid=1_5 button "Main navigation" expandable haspopup="menu"
+  uid=1_6 heading "Projects" level="1"
+  uid=1_7 StaticText "Manage your projects and track their progress"
+  uid=1_8 button "Create Project"
+  uid=1_9 generic "mattermost-plugin-agents Created 1/1/2026" focusable focused
+    uid=1_10 StaticText "mattermost-plugin-agents"
+    uid=1_11 button expandable haspopup="menu"
+    uid=1_12 StaticText "Created 1/1/2026"
+  uid=1_13 generic
+    uid=1_14 StaticText "vibe-kanban-caddy-module"
+    uid=1_15 button expandable haspopup="menu"
+    uid=1_16 StaticText "Created 1/1/2026"
+  uid=1_17 generic
+    uid=1_18 StaticText "rpi-deploy"
+    uid=1_19 button expandable haspopup="menu"
+    uid=1_20 StaticText "Created 12/28/2025"
+  uid=1_21 generic
+    uid=1_22 StaticText "midithru"
+    uid=1_23 button expandable haspopup="menu"
+    uid=1_24 StaticText "Created 12/28/2025"
+  uid=1_25 generic
+    uid=1_26 StaticText "focalboard-integrations"
+    uid=1_27 button expandable haspopup="menu"
+    uid=1_28 StaticText "Created 12/26/2025"
+  uid=1_29 generic
+    uid=1_30 StaticText "effect-pedal-controller"
+    uid=1_31 button expandable haspopup="menu"
+    uid=1_32 StaticText "Created 12/12/2025"
+  uid=1_33 generic
+    uid=1_34 StaticText "people-queue"
+    uid=1_35 button expandable haspopup="menu"
+    uid=1_36 StaticText "Created 12/11/2025"
+  uid=1_37 generic
+    uid=1_38 StaticText "TaxCryptcom"
+    uid=1_39 button expandable haspopup="menu"
+    uid=1_40 StaticText "Created 12/9/2025"
+  uid=1_41 generic
+    uid=1_42 StaticText "Claude Lint"
+    uid=1_43 button expandable haspopup="menu"
+    uid=1_44 StaticText "Created 12/9/2025"
+  uid=1_45 generic
+    uid=1_46 StaticText "claude-code-usage-tracker"
+    uid=1_47 button expandable haspopup="menu"
+    uid=1_48 StaticText "Created 12/9/2025"
+  uid=1_49 generic
+    uid=1_50 StaticText "FullPageOS Kiosk Compare"
+    uid=1_51 button expandable haspopup="menu"
+    uid=1_52 StaticText "Created 12/9/2025"
+  uid=1_53 generic
+    uid=1_54 StaticText "Personal Website"
+    uid=1_55 button expandable haspopup="menu"
+    uid=1_56 StaticText "Created 12/9/2025"
+  uid=1_57 generic
+    uid=1_58 StaticText "claude-lint-test"
+    uid=1_59 button expandable haspopup="menu"
+    uid=1_60 StaticText "Created 12/9/2025"
+  uid=1_61 generic
+    uid=1_62 StaticText "New Package Mafia"
+    uid=1_63 button expandable haspopup="menu"
+    uid=1_64 StaticText "Created 12/7/2025"
+  uid=1_65 generic
+    uid=1_66 StaticText "Soundtown Website"
+    uid=1_67 button expandable haspopup="menu"
+    uid=1_68 StaticText "Created 12/5/2025"
+  uid=1_69 generic
+    uid=1_70 StaticText "Springboard"
+    uid=1_71 button expandable haspopup="menu"
+    uid=1_72 StaticText "Created 12/4/2025"
+  uid=1_73 generic
+    uid=1_74 StaticText "vibe-kanban-issue-import"
+    uid=1_75 button expandable haspopup="menu"
+    uid=1_76 StaticText "Created 12/4/2025"
+  uid=1_77 generic
+    uid=1_78 StaticText "Vibe Kanban"
+    uid=1_79 button expandable haspopup="menu"
+    uid=1_80 StaticText "Created 12/4/2025"
+  uid=1_81 generic
+    uid=1_82 StaticText "SongDrive"
+    uid=1_83 button expandable haspopup="menu"
+    uid=1_84 StaticText "Created 12/4/2025"

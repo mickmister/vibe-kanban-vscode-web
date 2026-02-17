@@ -1,0 +1,51 @@
+[
+  {
+    "reqid": 1,
+    "method": "GET",
+    "url": "http://127.0.0.1:59728/",
+    "status": "200",
+    "type": "document"
+  },
+  {
+    "reqid": 2,
+    "method": "GET",
+    "url": "http://127.0.0.1:59728/assets/index-Ds2_mEpt.js",
+    "status": "200",
+    "type": "script"
+  },
+  {
+    "reqid": 3,
+    "method": "GET",
+    "url": "http://127.0.0.1:59728/assets/index-B0OKCSl1.css",
+    "status": "200",
+    "type": "stylesheet"
+  },
+  {
+    "reqid": 4,
+    "method": "GET",
+    "url": "https://fonts.googleapis.com/css2?family=Chivo+Mono:ital,wght@0,100..900;1,100..900&family=Noto+Emoji:wght@300..700&display=swap",
+    "status": "200",
+    "type": "stylesheet"
+  },
+  {
+    "reqid": 10,
+    "method": "GET",
+    "url": "http://127.0.0.1:59728/api/info",
+    "status": "200",
+    "type": "xhr"
+  },
+  {
+    "reqid": 33,
+    "method": "GET",
+    "url": "http://127.0.0.1:59728/site.webmanifest",
+    "status": "200",
+    "type": "document"
+  },
+  {
+    "reqid": 34,
+    "method": "GET",
+    "url": "http://127.0.0.1:59728/favicon-vk-dark.svg",
+    "status": "200",
+    "type": "image"
+  }
+]

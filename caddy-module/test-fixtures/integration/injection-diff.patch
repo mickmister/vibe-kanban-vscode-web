@@ -1,0 +1,25 @@
+--- test-fixtures/integration/original-response.html	2026-01-01 05:15:51
++++ test-fixtures/integration/proxied-response.html	2026-01-01 05:15:47
+@@ -15,6 +15,21 @@
+ 
+ <body>
+     <div id="root"></div>
++<script>
++// Phase 1 Test Injection Script
++// This script is injected by the Caddy module to verify injection works
++
++console.log('[Caddy Plugin Injector] System active!');
++window.__CADDY_INJECTION_TEST__ = true;
++
++// Additional test helper
++window.__CADDY_INJECTION_METADATA__ = {
++  version: 'phase1',
++  timestamp: Date.now(),
++  injectedBy: 'vibe-kanban-plugin-injector'
++};
++
++</script>
+ </body>
+ 
+ </html>
+\ No newline at end of file

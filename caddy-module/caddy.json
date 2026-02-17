@@ -1,0 +1,34 @@
+{
+	"apps": {
+		"http": {
+			"servers": {
+				"integration": {
+					"listen": [":8081"],
+					"routes": [
+						{
+							"handle": [
+								{
+									"handler": "vibe_kanban_plugin_injector",
+									"injection_script_path": "test-fixtures/injection-scripts/phase1-test.js"
+								},
+								{
+									"handler": "reverse_proxy",
+									"upstreams": [
+										{
+											"dial": "127.0.0.1:59728"
+										}
+									],
+									"headers": {
+										"request": {
+											"delete": ["Accept-Encoding"]
+										}
+									}
+								}
+							]
+						}
+					]
+				}
+			}
+		}
+	}
+}

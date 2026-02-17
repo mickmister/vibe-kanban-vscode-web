@@ -1,0 +1,27 @@
+{"level":"info","ts":1767262485.4867682,"msg":"maxprocs: Leaving GOMAXPROCS=10: CPU quota undefined"}
+{"level":"info","ts":1767262485.4868212,"msg":"GOMEMLIMIT is updated","package":"github.com/KimMachineGun/automemlimit/memlimit","GOMEMLIMIT":30923764531,"previous":9223372036854775807}
+{"level":"info","ts":1767262485.4868748,"msg":"using config from file","file":"caddy.json"}
+{"level":"info","ts":1767262485.494515,"logger":"admin","msg":"admin endpoint started","address":"localhost:2019","enforce_origin":false,"origins":["//localhost:2019","//[::1]:2019","//127.0.0.1:2019"]}
+{"level":"info","ts":1767262485.494795,"logger":"tls.cache.maintenance","msg":"started background certificate maintenance","cache":"0x140004c1a00"}
+{"level":"info","ts":1767262485.494804,"logger":"http.handlers.vibe_kanban_plugin_injector","msg":"plugin injector provisioned"}
+{"level":"warn","ts":1767262485.495064,"logger":"http","msg":"HTTP/2 skipped because it requires TLS","network":"tcp","addr":":8081"}
+{"level":"warn","ts":1767262485.495067,"logger":"http","msg":"HTTP/3 skipped because it requires TLS","network":"tcp","addr":":8081"}
+{"level":"info","ts":1767262485.4950678,"logger":"http.log","msg":"server running","name":"integration","protocols":["h1","h2","h3"]}
+{"level":"info","ts":1767262485.4962409,"msg":"autosaved config (load with --resume flag)","file":"/Users/mickmister/Library/Application Support/Caddy/autosave.json"}
+{"level":"info","ts":1767262485.496266,"msg":"serving initial configuration"}
+{"level":"info","ts":1767262485.5047302,"logger":"tls","msg":"cleaning storage unit","storage":"FileStorage:/Users/mickmister/Library/Application Support/Caddy"}
+{"level":"info","ts":1767262485.505516,"logger":"tls","msg":"certificate expired beyond grace period; cleaning up","storage":"FileStorage:/Users/mickmister/Library/Application Support/Caddy","asset_key":"certificates/local/jam.local/jam.local.crt","expired_for":2240842.505515,"grace_period":1209600}
+{"level":"info","ts":1767262485.505522,"logger":"tls","msg":"deleting asset because resource expired","storage":"FileStorage:/Users/mickmister/Library/Application Support/Caddy","asset_key":"certificates/local/jam.local/jam.local.crt"}
+{"level":"info","ts":1767262485.505839,"logger":"tls","msg":"deleting asset because resource expired","storage":"FileStorage:/Users/mickmister/Library/Application Support/Caddy","asset_key":"certificates/local/jam.local/jam.local.key"}
+{"level":"info","ts":1767262485.505933,"logger":"tls","msg":"deleting asset because resource expired","storage":"FileStorage:/Users/mickmister/Library/Application Support/Caddy","asset_key":"certificates/local/jam.local/jam.local.json"}
+{"level":"info","ts":1767262485.506019,"logger":"tls","msg":"deleting site folder because key is empty","storage":"FileStorage:/Users/mickmister/Library/Application Support/Caddy","site_key":"certificates/local/jam.local"}
+{"level":"info","ts":1767262485.506216,"logger":"tls","msg":"certificate expired beyond grace period; cleaning up","storage":"FileStorage:/Users/mickmister/Library/Application Support/Caddy","asset_key":"certificates/local/localhost/localhost.crt","expired_for":2240842.506215,"grace_period":1209600}
+{"level":"info","ts":1767262485.50622,"logger":"tls","msg":"deleting asset because resource expired","storage":"FileStorage:/Users/mickmister/Library/Application Support/Caddy","asset_key":"certificates/local/localhost/localhost.crt"}
+{"level":"info","ts":1767262485.5062652,"logger":"tls","msg":"deleting asset because resource expired","storage":"FileStorage:/Users/mickmister/Library/Application Support/Caddy","asset_key":"certificates/local/localhost/localhost.key"}
+{"level":"info","ts":1767262485.506315,"logger":"tls","msg":"deleting asset because resource expired","storage":"FileStorage:/Users/mickmister/Library/Application Support/Caddy","asset_key":"certificates/local/localhost/localhost.json"}
+{"level":"info","ts":1767262485.50639,"logger":"tls","msg":"deleting site folder because key is empty","storage":"FileStorage:/Users/mickmister/Library/Application Support/Caddy","site_key":"certificates/local/localhost"}
+{"level":"info","ts":1767262485.513124,"logger":"tls","msg":"finished cleaning storage units"}
+{"level":"error","ts":1767262511.06552,"logger":"http.handlers.reverse_proxy","msg":"can't switch protocols using non-Hijacker ResponseWriter","type":"*vibekanbanplugins.responseRecorder"}
+{"level":"error","ts":1767262511.0782442,"logger":"http.handlers.reverse_proxy","msg":"can't switch protocols using non-Hijacker ResponseWriter","type":"*vibekanbanplugins.responseRecorder"}
+{"level":"error","ts":1767262598.01928,"logger":"http.handlers.reverse_proxy","msg":"can't switch protocols using non-Hijacker ResponseWriter","type":"*vibekanbanplugins.responseRecorder"}
+{"level":"error","ts":1767262813.082798,"logger":"http.handlers.reverse_proxy","msg":"can't switch protocols using non-Hijacker ResponseWriter","type":"*vibekanbanplugins.responseRecorder"}

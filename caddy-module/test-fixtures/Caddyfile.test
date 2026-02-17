@@ -1,0 +1,105 @@
+{
+    # Test server configuration for Caddy module development
+    # This serves test fixtures without any injection (baseline)
+
+    # Use a non-standard port for testing
+    http_port 8081
+
+    # Disable admin API for simplicity
+    admin off
+
+    # Enable debug logging
+    debug
+}
+
+# Test fixture server
+:8081 {
+    # Health check endpoint
+    handle /health {
+        respond "OK - Test Fixture Server Running" 200
+    }
+
+    # Serve original (unmodified) HTML files
+    handle /original/* {
+        root * /private/var/folders/1j/j9tl30f930d27ck98gv5jpg80000gn/T/vibe-kanban/worktrees/344f-caddy-module-tha/vibe-kanban-caddy-module/test-fixtures/captured
+        uri strip_prefix /original
+
+        # Ensure HTML content type
+        header Content-Type "text/html; charset=utf-8"
+
+        file_server
+    }
+
+    # Serve expected (injected) HTML files
+    handle /expected/* {
+        root * /private/var/folders/1j/j9tl30f930d27ck98gv5jpg80000gn/T/vibe-kanban/worktrees/344f-caddy-module-tha/vibe-kanban-caddy-module/test-fixtures/expected
+        uri strip_prefix /expected
+
+        # Ensure HTML content type
+        header Content-Type "text/html; charset=utf-8"
+
+        file_server
+    }
+
+    # Serve injection scripts
+    handle /injection-scripts/* {
+        root * /private/var/folders/1j/j9tl30f930d27ck98gv5jpg80000gn/T/vibe-kanban/worktrees/344f-caddy-module-tha/vibe-kanban-caddy-module/test-fixtures/injection-scripts
+        uri strip_prefix /injection-scripts
+
+        # Ensure JavaScript content type
+        header Content-Type "application/javascript; charset=utf-8"
+
+        file_server
+    }
+
+    # Default handler - show available endpoints
+    handle {
+        respond `<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Fixture Server</title>
+    <style>
+        body { font-family: monospace; margin: 40px; }
+        h1 { color: #333; }
+        ul { list-style-type: none; padding: 0; }
+        li { margin: 10px 0; }
+        a { color: #0066cc; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        .section { margin: 20px 0; }
+    </style>
+</head>
+<body>
+    <h1>Caddy Module Test Fixture Server</h1>
+
+    <div class="section">
+        <h2>Health Check</h2>
+        <ul>
+            <li><a href="/health">/health</a> - Server health status</li>
+        </ul>
+    </div>
+
+    <div class="section">
+        <h2>Original Files (No Injection)</h2>
+        <ul>
+            <li><a href="/original/original.html">/original/original.html</a> - Captured HTML</li>
+            <li><a href="/original/response-headers.txt">/original/response-headers.txt</a> - HTTP headers</li>
+        </ul>
+    </div>
+
+    <div class="section">
+        <h2>Expected Files (With Injection)</h2>
+        <ul>
+            <li><a href="/expected/injected.html">/expected/injected.html</a> - Expected injected HTML</li>
+        </ul>
+    </div>
+
+    <div class="section">
+        <h2>Injection Scripts</h2>
+        <ul>
+            <li><a href="/injection-scripts/phase1-test.js">/injection-scripts/phase1-test.js</a> - Test injection script</li>
+        </ul>
+    </div>
+</body>
+</html>` 200
+    }
+}
