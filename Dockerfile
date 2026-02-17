@@ -22,9 +22,10 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Go (required for building Caddy with xcaddy)
-RUN wget https://go.dev/dl/go1.23.5.linux-amd64.tar.gz \
-    && tar -C /usr/local -xzf go1.23.5.linux-amd64.tar.gz \
-    && rm go1.23.5.linux-amd64.tar.gz
+# Using 1.25.7 to match go.mod requirement of 1.25.5
+RUN wget https://go.dev/dl/go1.25.7.linux-amd64.tar.gz \
+    && tar -C /usr/local -xzf go1.25.7.linux-amd64.tar.gz \
+    && rm go1.25.7.linux-amd64.tar.gz
 ENV PATH="/usr/local/go/bin:${PATH}"
 
 # Install xcaddy (Caddy build tool)

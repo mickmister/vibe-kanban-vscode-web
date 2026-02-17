@@ -67,7 +67,7 @@ func parseCaddyfile(h httpcaddyfile.Helper) (caddyhttp.MiddlewareHandler, error)
 func (p *PluginInjector) Provision(ctx caddy.Context) error {
 	p.logger = ctx.Logger(p)
 
-	// Resolve cloud URL: explicit config > VK_CLOUD_URL env > error
+	// Resolve cloud URL: explicit config > VK_CLOUD_URL env > no-op mode
 	if p.CloudURL != "" {
 		p.resolvedCloudURL = p.CloudURL
 		p.logger.Info("using configured cloud URL",
@@ -77,7 +77,8 @@ func (p *PluginInjector) Provision(ctx caddy.Context) error {
 		p.logger.Info("using cloud URL from VK_CLOUD_URL env var",
 			zap.String("url", p.resolvedCloudURL))
 	} else {
-		return fmt.Errorf("vk_rewrite: no cloud URL configured (set VK_CLOUD_URL env var or pass as directive argument)")
+		// No cloud URL configured - enable no-op mode (pass-through)
+		p.logger.Info("VK_CLOUD_URL not set, URL rewriting disabled (pass-through mode)")
 	}
 
 	return nil
@@ -253,6 +254,11 @@ func (p *PluginInjector) processResponse(headers http.Header, body []byte) []byt
 
 // rewriteJavaScript replaces the official VK cloud API URL with the custom one.
 func (p *PluginInjector) rewriteJavaScript(js []byte) []byte {
+	// No-op mode: if no cloud URL is configured, pass through without rewriting
+	if p.resolvedCloudURL == "" {
+		return js
+	}
+
 	// The official VK cloud API URL that appears in the npm package bundle
 	officialURL := []byte("https://api.vibekanban.com")
 	customURL := []byte(p.resolvedCloudURL)
