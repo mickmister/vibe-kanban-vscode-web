@@ -7,22 +7,22 @@
 # Run: Use docker-compose.vkcloud.yaml for full stack deployment
 #
 
-ARG VKTEST_REPO_URL=https://github.com/BloopAI/vibe-kanban.git
-ARG VKTEST_BRANCH=v0.1.14
+ARG VK_REPO_URL=https://github.com/BloopAI/vibe-kanban.git
+ARG VK_BRANCH=v0.1.14
 ARG FEATURES=""
 
 # ============================================================================
-# Stage 1: Clone the Vktest repository
+# Stage 1: Clone the Vibe Kanban repository
 # ============================================================================
 FROM alpine:3.19 AS repo-cloner
 
-ARG VKTEST_REPO_URL
-ARG VKTEST_BRANCH
+ARG VK_REPO_URL
+ARG VK_BRANCH
 
 RUN apk add --no-cache git
 
 WORKDIR /clone
-RUN git clone --depth 1 --branch ${VKTEST_BRANCH} ${VKTEST_REPO_URL} vktest
+RUN git clone --depth 1 --branch ${VK_BRANCH} ${VK_REPO_URL} vibe-kanban
 
 # ============================================================================
 # Stage 2: Build the remote frontend (React + Vite)
@@ -34,16 +34,16 @@ WORKDIR /repo
 RUN corepack enable
 
 # Copy package files for dependency installation
-COPY --from=repo-cloner /clone/vktest/pnpm-lock.yaml /clone/vktest/pnpm-workspace.yaml /clone/vktest/package.json ./
-COPY --from=repo-cloner /clone/vktest/frontend/package.json frontend/package.json
-COPY --from=repo-cloner /clone/vktest/remote-frontend/package.json remote-frontend/package.json
+COPY --from=repo-cloner /clone/vibe-kanban/pnpm-lock.yaml /clone/vibe-kanban/pnpm-workspace.yaml /clone/vibe-kanban/package.json ./
+COPY --from=repo-cloner /clone/vibe-kanban/frontend/package.json frontend/package.json
+COPY --from=repo-cloner /clone/vibe-kanban/remote-frontend/package.json remote-frontend/package.json
 
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
     pnpm install --filter ./remote-frontend --frozen-lockfile
 
 # Copy source files and build
-COPY --from=repo-cloner /clone/vktest/remote-frontend/ remote-frontend/
-COPY --from=repo-cloner /clone/vktest/shared/ shared/
+COPY --from=repo-cloner /clone/vibe-kanban/remote-frontend/ remote-frontend/
+COPY --from=repo-cloner /clone/vibe-kanban/shared/ shared/
 
 RUN pnpm -C remote-frontend build
 
@@ -70,11 +70,11 @@ RUN apt-get update \
 WORKDIR /app
 
 # Copy source from cloned repo
-COPY --from=repo-cloner /clone/vktest/rust-toolchain.toml ./
-COPY --from=repo-cloner /clone/vktest/Cargo.toml /clone/vktest/Cargo.lock ./
-COPY --from=repo-cloner /clone/vktest/crates crates
-COPY --from=repo-cloner /clone/vktest/shared shared
-COPY --from=repo-cloner /clone/vktest/assets assets
+COPY --from=repo-cloner /clone/vibe-kanban/rust-toolchain.toml ./
+COPY --from=repo-cloner /clone/vibe-kanban/Cargo.toml /clone/vibe-kanban/Cargo.lock ./
+COPY --from=repo-cloner /clone/vibe-kanban/crates crates
+COPY --from=repo-cloner /clone/vibe-kanban/shared shared
+COPY --from=repo-cloner /clone/vibe-kanban/assets assets
 
 RUN mkdir -p /app/bin
 

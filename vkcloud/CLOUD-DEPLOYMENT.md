@@ -235,16 +235,16 @@ If you've forked the vibe-kanban repository and made changes:
 
 **In `.env.vkcloud`**:
 ```bash
-VKTEST_REPO_URL=https://github.com/your-org/vibe-kanban.git
-VKTEST_BRANCH=your-custom-branch
+VK_REPO_URL=https://github.com/your-org/vibe-kanban.git
+VK_BRANCH=your-custom-branch
 ```
 
 **Or as build args**:
 ```bash
 docker build \
   -f Dockerfile.vkcloud \
-  --build-arg VKTEST_REPO_URL=https://github.com/your-org/vibe-kanban.git \
-  --build-arg VKTEST_BRANCH=custom-features \
+  --build-arg VK_REPO_URL=https://github.com/your-org/vibe-kanban.git \
+  --build-arg VK_BRANCH=custom-features \
   -t vk-cloud:custom \
   .
 ```
@@ -400,8 +400,8 @@ docker-compose exec vk-postgres \
 # Pull latest changes (if using git clone in Dockerfile)
 docker-compose build --no-cache vk-remote
 
-# Or update VKTEST_BRANCH in .env.vkcloud
-VKTEST_BRANCH=v2.0.0
+# Or update VK_BRANCH in .env.vkcloud
+VK_BRANCH=v2.0.0
 
 # Rebuild and restart
 docker-compose up -d --build vk-remote
