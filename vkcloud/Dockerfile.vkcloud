@@ -8,7 +8,7 @@
 #
 
 ARG VKTEST_REPO_URL=https://github.com/BloopAI/vibe-kanban.git
-ARG VKTEST_BRANCH=main
+ARG VKTEST_BRANCH=v0.1.14
 ARG FEATURES=""
 
 # ============================================================================
