@@ -42,8 +42,6 @@ services:
       timeout: 5s
       retries: 5
       start_period: 5s
-    ports:
-      - "${VK_POSTGRES_PORT:-5433}:5432"
     networks:
       - vk-cloud
     restart: unless-stopped
@@ -55,8 +53,6 @@ services:
     image: mcr.microsoft.com/azure-storage/azurite:3.35.0
     container_name: vk-azurite
     command: "azurite-blob --blobHost 0.0.0.0 --blobPort 10000 --loose --skipApiVersionCheck"
-    ports:
-      - "${VK_AZURITE_PORT:-10000}:10000"
     volumes:
       - vk-azurite-data:/data
     healthcheck:
