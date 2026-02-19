@@ -31,13 +31,13 @@ services:
     container_name: vk-postgres
     command: [ "postgres", "-c", "wal_level=logical" ]
     environment:
-      POSTGRES_DB: ${VK_POSTGRES_DB}
-      POSTGRES_USER: ${VK_POSTGRES_USER}
-      POSTGRES_PASSWORD: ${VK_POSTGRES_PASSWORD}
+      POSTGRES_DB: ${VK_POSTGRES_DB:-remote}
+      POSTGRES_USER: ${VK_POSTGRES_USER:-remote}
+      POSTGRES_PASSWORD: ${VK_POSTGRES_PASSWORD:-remote}
     volumes:
       - vk-postgres-data:/var/lib/postgresql/data
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U ${VK_POSTGRES_USER} -d ${VK_POSTGRES_DB}" ]
+      test: [ "CMD-SHELL", "pg_isready -U ${VK_POSTGRES_USER:-remote} -d ${VK_POSTGRES_DB:-remote}" ]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -93,9 +93,9 @@ services:
       context: .
       dockerfile: Dockerfile.vkcloud
       args:
-        VK_REPO_URL: ${VK_REPO_URL}
-        VK_BRANCH: ${VK_BRANCH}
-        FEATURES: ${FEATURES}
+        VK_REPO_URL: ${VK_REPO_URL:-https://github.com/BloopAI/vibe-kanban.git}
+        VK_BRANCH: ${VK_BRANCH:-v0.1.15-20260218201323}
+        FEATURES: ${FEATURES:-}
         POSTHOG_API_KEY: ${POSTHOG_API_KEY:-}
         POSTHOG_API_ENDPOINT: ${POSTHOG_API_ENDPOINT:-}
     container_name: vk-remote
@@ -106,14 +106,14 @@ services:
         condition: service_completed_successfully
     environment:
       # Server configuration
-      RUST_LOG: ${RUST_LOG}
+      RUST_LOG: ${RUST_LOG:-info,remote=info}
       SERVER_DATABASE_URL: postgres://${VK_POSTGRES_USER}:${VK_POSTGRES_PASSWORD}@vk-postgres:5432/${VK_POSTGRES_DB}
       SERVER_LISTEN_ADDR: 0.0.0.0:8081
       SERVER_PUBLIC_BASE_URL: ${PUBLIC_BASE_URL}
 
       # ElectricSQL configuration
       ELECTRIC_URL: http://vk-electric:3000
-      ELECTRIC_ROLE_PASSWORD: ${ELECTRIC_ROLE_PASSWORD}
+      ELECTRIC_ROLE_PASSWORD: ${ELECTRIC_ROLE_PASSWORD:-remote}
 
       # OAuth providers (at least one required)
       GITHUB_OAUTH_CLIENT_ID: ${GITHUB_OAUTH_CLIENT_ID}
@@ -129,11 +129,11 @@ services:
       VITE_API_BASE_URL: ${PUBLIC_BASE_URL}
 
       # Azure Storage (Azurite)
-      AZURE_STORAGE_ACCOUNT_NAME: ${AZURE_STORAGE_ACCOUNT_NAME}
-      AZURE_STORAGE_ACCOUNT_KEY: ${AZURE_STORAGE_ACCOUNT_KEY}
-      AZURE_STORAGE_CONTAINER_NAME: ${AZURE_STORAGE_CONTAINER_NAME}
-      AZURE_STORAGE_ENDPOINT_URL: ${AZURE_STORAGE_ENDPOINT_URL}
-      AZURE_STORAGE_PUBLIC_ENDPOINT_URL: ${AZURE_STORAGE_PUBLIC_ENDPOINT_URL}
+      AZURE_STORAGE_ACCOUNT_NAME: ${AZURE_STORAGE_ACCOUNT_NAME:-devstoreaccount1}
+      AZURE_STORAGE_ACCOUNT_KEY: ${AZURE_STORAGE_ACCOUNT_KEY:-Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==}
+      AZURE_STORAGE_CONTAINER_NAME: ${AZURE_STORAGE_CONTAINER_NAME:-issue-attachments}
+      AZURE_STORAGE_ENDPOINT_URL: ${AZURE_STORAGE_ENDPOINT_URL:-http://vk-azurite:10000/devstoreaccount1}
+      AZURE_STORAGE_PUBLIC_ENDPOINT_URL: ${AZURE_STORAGE_PUBLIC_ENDPOINT_URL:-http://localhost:10000/devstoreaccount1}
 
       # Optional integrations
       LOOPS_EMAIL_API_KEY: ${LOOPS_EMAIL_API_KEY:-}
@@ -151,7 +151,7 @@ services:
       STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
       STRIPE_FREE_SEAT_LIMIT: ${STRIPE_FREE_SEAT_LIMIT:-1}
     ports:
-      - "${REMOTE_SERVER_PORTS}"
+      - "${REMOTE_SERVER_PORTS:-127.0.0.1:3000:8081}"
     networks:
       - vk-cloud
     restart: unless-stopped
@@ -176,7 +176,7 @@ services:
       vk-remote:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgresql://electric_sync:${ELECTRIC_ROLE_PASSWORD}@vk-postgres:5432/${VK_POSTGRES_DB}?sslmode=disable
+      DATABASE_URL: postgresql://electric_sync:${ELECTRIC_ROLE_PASSWORD:-remote}@vk-postgres:5432/${VK_POSTGRES_DB:-remote}?sslmode=disable
       PG_PROXY_PORT: 65432
       LOGICAL_PUBLISHER_HOST: vk-electric
       AUTH_MODE: insecure
