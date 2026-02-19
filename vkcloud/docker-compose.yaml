@@ -31,13 +31,13 @@ services:
     container_name: vk-postgres
     command: [ "postgres", "-c", "wal_level=logical" ]
     environment:
-      POSTGRES_DB: ${VK_POSTGRES_DB:-remote}
-      POSTGRES_USER: ${VK_POSTGRES_USER:-remote}
-      POSTGRES_PASSWORD: ${VK_POSTGRES_PASSWORD:-remote}
+      POSTGRES_DB: ${VK_POSTGRES_DB}
+      POSTGRES_USER: ${VK_POSTGRES_USER}
+      POSTGRES_PASSWORD: ${VK_POSTGRES_PASSWORD}
     volumes:
       - vk-postgres-data:/var/lib/postgresql/data
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U ${VK_POSTGRES_USER:-remote} -d ${VK_POSTGRES_DB:-remote}" ]
+      test: [ "CMD-SHELL", "pg_isready -U ${VK_POSTGRES_USER} -d ${VK_POSTGRES_DB}" ]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -93,9 +93,9 @@ services:
       context: .
       dockerfile: Dockerfile.vkcloud
       args:
-        VK_REPO_URL: ${VK_REPO_URL:-https://github.com/BloopAI/vibe-kanban.git}
-        VK_BRANCH: ${VK_BRANCH:-v0.1.15-20260218201323}
-        FEATURES: ${FEATURES:-}
+        VK_REPO_URL: ${VK_REPO_URL}
+        VK_BRANCH: ${VK_BRANCH}
+        FEATURES: ${FEATURES}
         POSTHOG_API_KEY: ${POSTHOG_API_KEY:-}
         POSTHOG_API_ENDPOINT: ${POSTHOG_API_ENDPOINT:-}
     container_name: vk-remote
@@ -106,58 +106,52 @@ services:
         condition: service_completed_successfully
     environment:
       # Server configuration
-      RUST_LOG: ${RUST_LOG:-info,remote=info}
-      SERVER_DATABASE_URL: postgres://${VK_POSTGRES_USER:-remote}:${VK_POSTGRES_PASSWORD:-remote}@vk-postgres:5432/${VK_POSTGRES_DB:-remote}
+      RUST_LOG: ${RUST_LOG}
+      SERVER_DATABASE_URL: postgres://${VK_POSTGRES_USER}:${VK_POSTGRES_PASSWORD}@vk-postgres:5432/${VK_POSTGRES_DB}
       SERVER_LISTEN_ADDR: 0.0.0.0:8081
-      SERVER_PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:-http://localhost:3000}
+      SERVER_PUBLIC_BASE_URL: ${PUBLIC_BASE_URL}
 
       # ElectricSQL configuration
       ELECTRIC_URL: http://vk-electric:3000
-      ELECTRIC_ROLE_PASSWORD: ${ELECTRIC_ROLE_PASSWORD:-remote}
+      ELECTRIC_ROLE_PASSWORD: ${ELECTRIC_ROLE_PASSWORD}
 
-      # OAuth providers (configure at least one)
-      GITHUB_OAUTH_CLIENT_ID: ${GITHUB_OAUTH_CLIENT_ID:?GitHub OAuth Client ID required - set in .env.vkcloud}
-      GITHUB_OAUTH_CLIENT_SECRET: ${GITHUB_OAUTH_CLIENT_SECRET:?GitHub OAuth Client Secret required - set in .env.vkcloud}
+      # OAuth providers (at least one required)
+      GITHUB_OAUTH_CLIENT_ID: ${GITHUB_OAUTH_CLIENT_ID}
+      GITHUB_OAUTH_CLIENT_SECRET: ${GITHUB_OAUTH_CLIENT_SECRET}
       GOOGLE_OAUTH_CLIENT_ID: ${GOOGLE_OAUTH_CLIENT_ID:-}
       GOOGLE_OAUTH_CLIENT_SECRET: ${GOOGLE_OAUTH_CLIENT_SECRET:-}
 
-      # JWT secret (REQUIRED - generate with: openssl rand -base64 32)
-      VIBEKANBAN_REMOTE_JWT_SECRET: ${VIBEKANBAN_REMOTE_JWT_SECRET:?JWT secret required - set in .env.vkcloud}
+      # JWT secret (REQUIRED)
+      VIBEKANBAN_REMOTE_JWT_SECRET: ${VIBEKANBAN_REMOTE_JWT_SECRET}
 
-      # Frontend build-time variables (for API URLs in JavaScript bundle)
-      VITE_APP_BASE_URL: ${PUBLIC_BASE_URL:-http://localhost:3000}
-      VITE_API_BASE_URL: ${PUBLIC_BASE_URL:-http://localhost:3000}
+      # Frontend build-time variables
+      VITE_APP_BASE_URL: ${PUBLIC_BASE_URL}
+      VITE_API_BASE_URL: ${PUBLIC_BASE_URL}
 
-      # Azure Storage (Azurite local emulator)
-      AZURE_STORAGE_ACCOUNT_NAME: ${AZURE_STORAGE_ACCOUNT_NAME:-devstoreaccount1}
-      AZURE_STORAGE_ACCOUNT_KEY: ${AZURE_STORAGE_ACCOUNT_KEY:-Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==}
-      AZURE_STORAGE_CONTAINER_NAME: ${AZURE_STORAGE_CONTAINER_NAME:-issue-attachments}
-      AZURE_STORAGE_ENDPOINT_URL: ${AZURE_STORAGE_ENDPOINT_URL:-http://vk-azurite:10000/devstoreaccount1}
-      AZURE_STORAGE_PUBLIC_ENDPOINT_URL: ${AZURE_STORAGE_PUBLIC_ENDPOINT_URL:-http://localhost:10000/devstoreaccount1}
+      # Azure Storage (Azurite)
+      AZURE_STORAGE_ACCOUNT_NAME: ${AZURE_STORAGE_ACCOUNT_NAME}
+      AZURE_STORAGE_ACCOUNT_KEY: ${AZURE_STORAGE_ACCOUNT_KEY}
+      AZURE_STORAGE_CONTAINER_NAME: ${AZURE_STORAGE_CONTAINER_NAME}
+      AZURE_STORAGE_ENDPOINT_URL: ${AZURE_STORAGE_ENDPOINT_URL}
+      AZURE_STORAGE_PUBLIC_ENDPOINT_URL: ${AZURE_STORAGE_PUBLIC_ENDPOINT_URL}
 
-      # Optional: Email invitations (Loops.so)
+      # Optional integrations
       LOOPS_EMAIL_API_KEY: ${LOOPS_EMAIL_API_KEY:-}
-
-      # Optional: GitHub App integration for PR reviews
       GITHUB_APP_ID: ${GITHUB_APP_ID:-}
       GITHUB_APP_PRIVATE_KEY: ${GITHUB_APP_PRIVATE_KEY:-}
       GITHUB_APP_WEBHOOK_SECRET: ${GITHUB_APP_WEBHOOK_SECRET:-}
       GITHUB_APP_SLUG: ${GITHUB_APP_SLUG:-}
-
-      # Optional: Cloudflare R2 for code review storage
       R2_ACCESS_KEY_ID: ${R2_ACCESS_KEY_ID:-}
       R2_SECRET_ACCESS_KEY: ${R2_SECRET_ACCESS_KEY:-}
       R2_REVIEW_ENDPOINT: ${R2_REVIEW_ENDPOINT:-}
       R2_REVIEW_BUCKET: ${R2_REVIEW_BUCKET:-}
       REVIEW_WORKER_BASE_URL: ${REVIEW_WORKER_BASE_URL:-}
-
-      # Optional: Stripe billing (only if using billing features)
       STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
       STRIPE_TEAM_SEAT_PRICE_ID: ${STRIPE_TEAM_SEAT_PRICE_ID:-}
       STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
       STRIPE_FREE_SEAT_LIMIT: ${STRIPE_FREE_SEAT_LIMIT:-1}
     ports:
-      - "${REMOTE_SERVER_PORTS:-127.0.0.1:3000:8081}"
+      - "${REMOTE_SERVER_PORTS}"
     networks:
       - vk-cloud
     restart: unless-stopped
@@ -182,7 +176,7 @@ services:
       vk-remote:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgresql://electric_sync:${ELECTRIC_ROLE_PASSWORD:-remote}@vk-postgres:5432/${VK_POSTGRES_DB:-remote}?sslmode=disable
+      DATABASE_URL: postgresql://electric_sync:${ELECTRIC_ROLE_PASSWORD}@vk-postgres:5432/${VK_POSTGRES_DB}?sslmode=disable
       PG_PROXY_PORT: 65432
       LOGICAL_PUBLISHER_HOST: vk-electric
       AUTH_MODE: insecure
