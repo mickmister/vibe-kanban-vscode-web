@@ -55,17 +55,17 @@ echo -e "${GREEN}Authenticating Docker with GHCR...${NC}"
 gh auth token | docker login ghcr.io -u "${GITHUB_USERNAME}" --password-stdin
 log "Docker authentication complete"
 
-# Build the image
+# Build the image using build-specific compose file
 echo ""
 log "Starting Docker build (this will take 7+ minutes)..."
 echo -e "${GREEN}Building image...${NC}"
-log "Running: docker compose build vk-remote"
-docker compose build vk-remote 2>&1 | tee /tmp/vk-build.log
+log "Running: docker compose -f docker-compose.build.yaml build vk-remote"
+IMAGE_TAG="${IMAGE_TAG}" docker compose -f docker-compose.build.yaml build vk-remote 2>&1 | tee /tmp/vk-build.log
 log "Docker build completed"
 
 # Get the local image name
-log "Getting local image name from docker compose config..."
-LOCAL_IMAGE=$(docker compose config | grep -A 5 "vk-remote:" | grep "image:" | awk '{print $2}')
+log "Getting local image name..."
+LOCAL_IMAGE="vkcloud-vk-remote:${IMAGE_TAG}"
 echo -e "${GREEN}Local image:${NC} ${LOCAL_IMAGE}"
 log "Local image name: ${LOCAL_IMAGE}"
 

@@ -44,13 +44,13 @@ if ! docker info 2>/dev/null | grep -q "ghcr.io"; then
     fi
 fi
 
-# Build the image
+# Build the image using build-specific compose file
 echo ""
 echo -e "${GREEN}Building image...${NC}"
-docker compose build vk-remote
+IMAGE_TAG="${IMAGE_TAG}" docker compose -f docker-compose.build.yaml build vk-remote
 
 # Get the local image name
-LOCAL_IMAGE=$(docker compose config | grep -A 5 "vk-remote:" | grep "image:" | awk '{print $2}')
+LOCAL_IMAGE="vkcloud-vk-remote:${IMAGE_TAG}"
 echo -e "${GREEN}Local image:${NC} ${LOCAL_IMAGE}"
 
 # Tag the image for GHCR
