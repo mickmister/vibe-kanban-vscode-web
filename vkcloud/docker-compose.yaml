@@ -28,7 +28,6 @@ services:
   # --------------------------------------------------------------------------
   vk-postgres:
     image: postgres:16-alpine
-    container_name: vk-postgres
     command: [ "postgres", "-c", "wal_level=logical" ]
     environment:
       POSTGRES_DB: ${VK_POSTGRES_DB:-remote}
@@ -107,7 +106,7 @@ services:
     environment:
       # Server configuration
       RUST_LOG: ${RUST_LOG:-info,remote=info}
-      SERVER_DATABASE_URL: postgres://${VK_POSTGRES_USER}:${VK_POSTGRES_PASSWORD}@vk-postgres:5432/${VK_POSTGRES_DB}
+      SERVER_DATABASE_URL: postgres://${VK_POSTGRES_USER:-remote}:${VK_POSTGRES_PASSWORD:-remote}@vk-postgres:5432/${VK_POSTGRES_DB:-remote}
       SERVER_LISTEN_ADDR: 0.0.0.0:8081
       SERVER_PUBLIC_BASE_URL: ${PUBLIC_BASE_URL}
 
