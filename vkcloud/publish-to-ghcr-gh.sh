@@ -1,9 +1,15 @@
 #!/bin/bash
 set -e
+set -x  # Enable verbose command tracing
 
 # Configuration
 IMAGE_NAME="${IMAGE_NAME:-vk-cloud}"
 IMAGE_TAG="${IMAGE_TAG:-latest}"
+
+# Log each step with timestamp
+log() {
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*"
+}
 
 # Colors
 RED='\033[0;31m'
@@ -16,49 +22,66 @@ echo "=================================================================="
 echo ""
 
 # Check if gh is installed
+log "Checking for gh CLI..."
 if ! command -v gh &> /dev/null; then
     echo -e "${RED}Error: gh CLI is not installed${NC}"
     echo "Install it: https://cli.github.com/"
     exit 1
 fi
+log "gh CLI found: $(which gh)"
 
 # Check if authenticated with gh
+log "Checking gh authentication..."
 if ! gh auth status &> /dev/null; then
     echo -e "${YELLOW}Not authenticated with GitHub CLI${NC}"
     echo "Please authenticate: gh auth login"
     exit 1
 fi
+log "gh authentication verified"
 
 # Get GitHub username from gh CLI
+log "Getting GitHub username..."
 GITHUB_USERNAME=$(gh api user -q .login)
 echo -e "${GREEN}GitHub username:${NC} ${GITHUB_USERNAME}"
+log "Username retrieved: ${GITHUB_USERNAME}"
 
 GHCR_IMAGE="ghcr.io/${GITHUB_USERNAME}/${IMAGE_NAME}:${IMAGE_TAG}"
 echo -e "${YELLOW}Image will be published as:${NC} ${GHCR_IMAGE}"
 echo ""
 
 # Authenticate Docker with GHCR using gh token
+log "Authenticating Docker with GHCR..."
 echo -e "${GREEN}Authenticating Docker with GHCR...${NC}"
 gh auth token | docker login ghcr.io -u "${GITHUB_USERNAME}" --password-stdin
+log "Docker authentication complete"
 
 # Build the image
 echo ""
+log "Starting Docker build (this will take 7+ minutes)..."
 echo -e "${GREEN}Building image...${NC}"
-docker compose build vk-remote
+log "Running: docker compose build vk-remote"
+docker compose build vk-remote 2>&1 | tee /tmp/vk-build.log
+log "Docker build completed"
 
 # Get the local image name
+log "Getting local image name from docker compose config..."
 LOCAL_IMAGE=$(docker compose config | grep -A 5 "vk-remote:" | grep "image:" | awk '{print $2}')
 echo -e "${GREEN}Local image:${NC} ${LOCAL_IMAGE}"
+log "Local image name: ${LOCAL_IMAGE}"
 
 # Tag the image for GHCR
 echo ""
+log "Tagging image for GHCR..."
 echo -e "${GREEN}Tagging image for GHCR...${NC}"
 docker tag "${LOCAL_IMAGE}" "${GHCR_IMAGE}"
+log "Tagging complete: ${LOCAL_IMAGE} -> ${GHCR_IMAGE}"
 
 # Push to GHCR
 echo ""
+log "Pushing image to GHCR (this may take several minutes)..."
 echo -e "${GREEN}Pushing to GHCR...${NC}"
-docker push "${GHCR_IMAGE}"
+docker push "${GHCR_IMAGE}" 2>&1 | tee /tmp/vk-push.log
+log "Push complete"
 
 echo ""
 echo -e "${GREEN}✓ Successfully published to GHCR!${NC}"
