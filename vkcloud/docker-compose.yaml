@@ -89,15 +89,18 @@ services:
   # VK Remote Server (API + Frontend)
   # --------------------------------------------------------------------------
   vk-remote:
-    build:
-      context: .
-      dockerfile: Dockerfile.vkcloud
-      args:
-        VK_REPO_URL: ${VK_REPO_URL:-https://github.com/BloopAI/vibe-kanban.git}
-        VK_BRANCH: ${VK_BRANCH:-v0.1.15-20260218201323}
-        FEATURES: ${FEATURES:-}
-        POSTHOG_API_KEY: ${POSTHOG_API_KEY:-}
-        POSTHOG_API_ENDPOINT: ${POSTHOG_API_ENDPOINT:-}
+    image: ghcr.io/mickmister/vk-cloud:${VKCLOUD_IMAGE_VERSION:-0.1.15}
+    # To build locally instead of using pre-built image, comment out 'image:' above
+    # and uncomment the 'build:' section below:
+    # build:
+    #   context: .
+    #   dockerfile: Dockerfile.vkcloud
+    #   args:
+    #     VK_REPO_URL: ${VK_REPO_URL:-https://github.com/BloopAI/vibe-kanban.git}
+    #     VK_BRANCH: ${VK_BRANCH:-v0.1.15-20260218201323}
+    #     FEATURES: ${FEATURES:-}
+    #     POSTHOG_API_KEY: ${POSTHOG_API_KEY:-}
+    #     POSTHOG_API_ENDPOINT: ${POSTHOG_API_ENDPOINT:-}
     container_name: vk-remote
     depends_on:
       vk-postgres:
