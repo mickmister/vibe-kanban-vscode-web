@@ -156,10 +156,10 @@ services:
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:8081/health"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
-      start_period: 10s
+      interval: 10s
+      timeout: 10s
+      retries: 30
+      start_period: 120s
 
   # --------------------------------------------------------------------------
   # ElectricSQL (real-time sync service)
