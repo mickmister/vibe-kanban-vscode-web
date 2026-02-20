@@ -187,8 +187,6 @@ services:
       ELECTRIC_MANUAL_TABLE_PUBLISHING: true
       ELECTRIC_USAGE_REPORTING: false
       ELECTRIC_FEATURE_FLAGS: allow_subqueries,tagged_subqueries
-    volumes:
-      - vk-electric-data:/app/persistent
     networks:
       - vk-cloud
     restart: on-failure
@@ -198,8 +196,6 @@ services:
 # ============================================================================
 volumes:
   vk-postgres-data:
-    driver: local
-  vk-electric-data:
     driver: local
   vk-azurite-data:
     driver: local
