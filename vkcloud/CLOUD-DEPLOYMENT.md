@@ -105,7 +105,7 @@ In your local VK container (vibe-kanban-vscode-web):
 
 ```bash
 # Edit .env or docker-compose.yaml
-VK_CLOUD_URL=http://host.docker.internal:3000
+VK_SHARED_API_BASE=http://host.docker.internal:3000
 
 # Restart to pick up the new env var
 docker-compose restart
@@ -279,7 +279,7 @@ Each team member runs their own local VK container (vibe-kanban-vscode-web) and 
 
 1. Edit `.env` or `docker-compose.yaml`:
    ```bash
-   VK_CLOUD_URL=https://vk.yourdomain.com
+   VK_SHARED_API_BASE=https://vk.yourdomain.com
    ```
 
 2. Restart the container:
@@ -341,17 +341,15 @@ curl http://localhost:3000/api/auth/github
 ```bash
 # Inside the local VK container
 docker-compose exec vibe-kanban-vscode-web bash
-curl -s http://localhost:3007 | grep -o 'https://api.vibekanban.com'
-# Should return nothing if VK_CLOUD_URL is set
-
-# Check Caddy logs
-docker-compose logs caddy | grep "vk_rewrite"
+# VK_SHARED_API_BASE is now configured at runtime (PR #2769)
+env | grep VK_SHARED_API_BASE
+# Should show your cloud URL
 ```
 
-**Verify environment variable**:
+**Verify VK Cloud connection**:
 ```bash
-docker-compose exec vibe-kanban-vscode-web env | grep VK_CLOUD_URL
-# Should show your cloud URL
+docker-compose exec vibe-kanban-vscode-web env | grep VK_SHARED_API_BASE
+# Should show your cloud URL (e.g., https://vk.yourdomain.com)
 ```
 
 ---

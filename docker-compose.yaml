@@ -31,7 +31,8 @@ services:
       TAILSCALE_HOSTNAME: ${TAILSCALE_HOSTNAME:-vkdev}
 
       # VK Cloud connection (optional - if set, local VK connects to this cloud instance)
-      VK_CLOUD_URL: ${VK_CLOUD_URL:-}
+      # Uses VK_SHARED_API_BASE (PR #2769) for runtime API URL configuration
+      VK_SHARED_API_BASE: ${VK_SHARED_API_BASE:-}
 
     volumes:
       # Persist git repositories
