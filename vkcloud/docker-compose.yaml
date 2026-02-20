@@ -83,6 +83,7 @@ services:
         echo "Azurite CORS configured successfully"
     networks:
       - vk-cloud
+    restart: "no"
 
   # --------------------------------------------------------------------------
   # VK Remote Server (API + Frontend)
