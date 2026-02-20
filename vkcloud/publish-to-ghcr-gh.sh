@@ -69,6 +69,16 @@ LOCAL_IMAGE="vkcloud-vk-remote:${IMAGE_TAG}"
 echo -e "${GREEN}Local image:${NC} ${LOCAL_IMAGE}"
 log "Local image name: ${LOCAL_IMAGE}"
 
+# Verify the image exists
+log "Verifying image exists..."
+if ! docker image inspect "${LOCAL_IMAGE}" &> /dev/null; then
+    echo -e "${RED}Error: Image ${LOCAL_IMAGE} not found!${NC}"
+    echo "Available images:"
+    docker images | grep -E "vk-remote|vk-cloud|vkcloud"
+    exit 1
+fi
+log "Image verified: ${LOCAL_IMAGE}"
+
 # Tag the image for GHCR
 echo ""
 log "Tagging image for GHCR..."
