@@ -7,9 +7,9 @@
 # Run: Use docker-compose.vkcloud.yaml for full stack deployment
 #
 
-ARG VK_REPO_URL=https://github.com/BloopAI/vibe-kanban.git
-ARG VK_BRANCH=v0.1.15-20260218201323
-ARG FEATURES=""
+ARG VK_REPO_URL
+ARG VK_BRANCH
+ARG FEATURES
 
 # ============================================================================
 # Stage 1: Clone the Vibe Kanban repository
@@ -53,14 +53,12 @@ RUN pnpm -C remote-frontend build
 FROM rust:1.93-slim-bookworm AS builder
 
 ARG FEATURES
-ARG POSTHOG_API_KEY=""
-ARG POSTHOG_API_ENDPOINT=""
-ARG SENTRY_DSN_REMOTE=""
+ARG POSTHOG_API_KEY
+ARG POSTHOG_API_ENDPOINT
 
 ENV CARGO_REGISTRIES_CRATES_IO_PROTOCOL=sparse
 ENV POSTHOG_API_KEY=${POSTHOG_API_KEY}
 ENV POSTHOG_API_ENDPOINT=${POSTHOG_API_ENDPOINT}
-ENV SENTRY_DSN_REMOTE=${SENTRY_DSN_REMOTE}
 
 # Install build dependencies
 RUN apt-get update \
