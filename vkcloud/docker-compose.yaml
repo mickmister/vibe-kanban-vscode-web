@@ -86,6 +86,32 @@ services:
     restart: "no"
 
   # --------------------------------------------------------------------------
+  # PostgreSQL Cleanup (remove leftover ElectricSQL publication)
+  # --------------------------------------------------------------------------
+  vk-postgres-cleanup:
+    image: postgres:16-alpine
+    depends_on:
+      vk-postgres:
+        condition: service_healthy
+    environment:
+      PGHOST: vk-postgres
+      PGPORT: 5432
+      PGDATABASE: ${VK_POSTGRES_DB:-remote}
+      PGUSER: ${VK_POSTGRES_USER:-remote}
+      PGPASSWORD: ${VK_POSTGRES_PASSWORD:-remote}
+    command:
+      - /bin/sh
+      - -c
+      - |
+        echo "Cleaning up leftover ElectricSQL objects..."
+        psql -c "DROP PUBLICATION IF EXISTS electric_publication_default CASCADE;" || true
+        psql -c "DROP ROLE IF EXISTS electric_sync;" || true
+        echo "Cleanup complete"
+    networks:
+      - vk-cloud
+    restart: "no"
+
+  # --------------------------------------------------------------------------
   # VK Remote Server (API + Frontend)
   # --------------------------------------------------------------------------
   vk-remote:
@@ -105,6 +131,8 @@ services:
     depends_on:
       vk-postgres:
         condition: service_healthy
+      vk-postgres-cleanup:
+        condition: service_completed_successfully
       vk-azurite-init:
         condition: service_completed_successfully
     environment:
