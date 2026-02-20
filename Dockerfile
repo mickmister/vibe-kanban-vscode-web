@@ -29,20 +29,30 @@ RUN wget https://go.dev/dl/go1.25.7.linux-amd64.tar.gz \
 ENV PATH="/usr/local/go/bin:${PATH}"
 
 # Install xcaddy (Caddy build tool)
-RUN go install github.com/caddyserver/xcaddy/cmd/xcaddy@latest
-ENV PATH="/root/go/bin:${PATH}"
+# COMMENTED OUT: Custom Caddy module no longer needed with VK_SHARED_API_BASE support (PR #2769)
+# RUN go install github.com/caddyserver/xcaddy/cmd/xcaddy@latest
+# ENV PATH="/root/go/bin:${PATH}"
 
 # Copy Caddy module source
-COPY caddy-module /tmp/caddy-module
+# COPY caddy-module /tmp/caddy-module
 
 # Build custom Caddy with vibe-kanban rewrite module
-RUN cd /tmp/caddy-module \
-    && xcaddy build \
-        --with github.com/yourusername/vibe-kanban-plugins=. \
-    && mv caddy /usr/bin/caddy \
-    && chmod +x /usr/bin/caddy \
-    && cd / \
-    && rm -rf /tmp/caddy-module
+# RUN cd /tmp/caddy-module \
+#     && xcaddy build \
+#         --with github.com/yourusername/vibe-kanban-plugins=. \
+#     && mv caddy /usr/bin/caddy \
+#     && chmod +x /usr/bin/caddy \
+#     && cd / \
+#     && rm -rf /tmp/caddy-module
+
+# Install standard Caddy instead
+RUN apt-get update && apt-get install -y debian-keyring debian-archive-keyring apt-transport-https curl \
+    && curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg \
+    && curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' | tee /etc/apt/sources.list.d/caddy-stable.list \
+    && apt-get update \
+    && apt-get install -y caddy \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
 # Install Tailscale
 RUN curl -fsSL https://pkgs.tailscale.com/stable/debian/bullseye.noarmor.gpg | tee /usr/share/keyrings/tailscale-archive-keyring.gpg >/dev/null \
