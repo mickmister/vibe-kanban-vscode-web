@@ -4,3 +4,4 @@ data/kv_data.json
 data/kv.db
 .springboard
 index.html
+storybook-static
