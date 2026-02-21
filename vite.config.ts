@@ -5,16 +5,16 @@ import path from 'node:path';
 
 const platformVariant = process.env.SPRINGBOARD_PLATFORM || '';
 
-let port = 3000;
+let devPort = 3000;
 const envPort = process.env.PORT || '';
 try {
   const num = parseInt(envPort);
-  
+  if (!isNaN(num)) {
+    devPort = num;
+  }
 } catch (e) {
 
 }
-
-const devPort = process.env.PORT || 3000;
 
 let platforms: ('browser' | 'node')[] = ['browser', 'node'];
 

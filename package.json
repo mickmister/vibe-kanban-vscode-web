@@ -17,6 +17,7 @@
     "@tailwindcss/vite": "^4.1.18",
     "better-sqlite3": "^12.6.2",
     "crossws": "^0.4.4",
+    "draggabilly": "^3.0.0",
     "framer-motion": "^12.34.0",
     "hono": "^4.11.9",
     "immer": "^11.1.4",
@@ -29,6 +30,7 @@
     "tailwindcss": "^4.1.18"
   },
   "devDependencies": {
+    "@types/draggabilly": "^3.0.0",
     "@types/node": "^25.2.3",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
