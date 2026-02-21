@@ -8,7 +8,8 @@
     "build": "npm run build:web && npm run build:node",
     "build:web": "SPRINGBOARD_PLATFORM=web vite build",
     "build:node": "SPRINGBOARD_PLATFORM=node vite build --outDir dist/node",
-    "check-types": "tsc --noEmit"
+    "check-types": "tsc --noEmit",
+    "postinstall": "npm rebuild better-sqlite3"
   },
   "dependencies": {
     "@heroui/react": "^2.8.9",

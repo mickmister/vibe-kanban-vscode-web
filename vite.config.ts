@@ -5,6 +5,17 @@ import path from 'node:path';
 
 const platformVariant = process.env.SPRINGBOARD_PLATFORM || '';
 
+let port = 3000;
+const envPort = process.env.PORT || '';
+try {
+  const num = parseInt(envPort);
+  
+} catch (e) {
+
+}
+
+const devPort = process.env.PORT || 3000;
+
 let platforms: ('browser' | 'node')[] = ['browser', 'node'];
 
 if (platformVariant === 'node') {
@@ -35,7 +46,7 @@ export default defineConfig({
     'process.env.DEBUG_LOG_PERFORMANCE': '""',
   },
   server: {
-    port: 3000,
+    port: devPort,
     host: true,
   },
 });
