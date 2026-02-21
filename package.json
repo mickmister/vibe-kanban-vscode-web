@@ -11,9 +11,9 @@
     "check-types": "tsc --noEmit",
     "postinstall": "npm rebuild better-sqlite3",
     "storybook": "npm run build-storybook && npm run serve-storybook",
-    "storybook:dev": "storybook dev -p 6006",
+    "storybook:dev": "storybook dev -p $PORT",
     "build-storybook": "storybook build",
-    "serve-storybook": "serve storybook-static -l 6006"
+    "serve-storybook": "serve storybook-static -l $PORT"
   },
   "dependencies": {
     "@heroui/react": "^2.8.9",

@@ -19,4 +19,6 @@ pnpm i
 #   pnpm i
 # fi
 
-npm run dev
+# npm run dev
+
+npm run storybook
