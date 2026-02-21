@@ -136,7 +136,7 @@
 }
 .chrome-tabs .chrome-tab .chrome-tab-favicon {
   position: relative;
-  display: flex;
+  display: none; /* Hidden by default */
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
@@ -145,6 +145,9 @@
   width: 16px;
   background-size: 16px;
   margin-left: 4px;
+}
+.chrome-tabs .chrome-tab .chrome-tab-favicon:not([hidden]) {
+  display: flex; /* Show when explicitly not hidden */
 }
 .chrome-tabs .chrome-tab[is-small] .chrome-tab-favicon {
   margin-left: 0;
@@ -202,7 +205,8 @@
 .chrome-tabs .chrome-tab .chrome-tab-close {
   flex-grow: 0;
   flex-shrink: 0;
-  position: relative;
+  position: absolute;
+  right: 8px;
   width: 16px;
   height: 16px;
   border-radius: 50%;
@@ -210,25 +214,21 @@
   background-position: center center;
   background-repeat: no-repeat;
   background-size: 8px 8px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease;
 }
+/* Show close button on tab hover */
 @media (hover: hover) {
+  .chrome-tabs .chrome-tab:hover .chrome-tab-close {
+    opacity: 1;
+    pointer-events: all;
+  }
   .chrome-tabs .chrome-tab .chrome-tab-close:hover {
     background-color: #e8eaed;
   }
   .chrome-tabs .chrome-tab .chrome-tab-close:hover:active {
     background-color: #dadce0;
-  }
-}
-@media not all and (hover: hover) {
-  .chrome-tabs .chrome-tab .chrome-tab-close:active {
-    background-color: #dadce0;
-  }
-}
-@media (hover: hover) {
-  .chrome-tabs
-    .chrome-tab:not([active])
-    .chrome-tab-close:not(:hover):not(:active) {
-    opacity: 0.8;
   }
 }
 .chrome-tabs .chrome-tab[is-smaller] .chrome-tab-close {

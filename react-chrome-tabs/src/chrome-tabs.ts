@@ -381,11 +381,11 @@ class ChromeTabs {
   }
 
   setTabCloseEventListener(tabEl: HTMLElement) {
-    tabEl.querySelector(".chrome-tab-close")!.addEventListener("click", (_) => {
-      _.stopImmediatePropagation();
-      // this.removeTab(tabEl);
-      this.emit("tabClose", { tabEl });
-    });
+    // Close button is disabled - tabs can only be closed via context menu
+    // tabEl.querySelector(".chrome-tab-close")!.addEventListener("click", (_) => {
+    //   _.stopImmediatePropagation();
+    //   this.emit("tabClose", { tabEl });
+    // });
   }
 
   get activeTabEl() {
