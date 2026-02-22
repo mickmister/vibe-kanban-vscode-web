@@ -33,7 +33,7 @@ export function WorkspaceContentView({
   }
 
   return (
-    <>
+    <div className="flex flex-row gap-2 flex-1 min-h-0 overflow-x-auto p-2">
       {activeTabGroups.map((tg) => (
         <TabGroupPanel
           key={tg.id}
@@ -53,6 +53,6 @@ export function WorkspaceContentView({
           onDrop={onDrop}
         />
       ))}
-    </>
+    </div>
   );
 }

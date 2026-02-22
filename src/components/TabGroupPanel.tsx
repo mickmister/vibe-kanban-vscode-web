@@ -35,7 +35,7 @@ export function TabGroupPanel({
 }: TabGroupPanelProps) {
   return (
     <div
-      className={`flex flex-col min-h-0 flex-1 ${
+      className={`flex flex-col min-h-0 flex-shrink-0 min-w-[400px] ${
         isActive ? 'ring-1 ring-primary-500/30' : ''
       }`}
       onClick={onSetActive}
