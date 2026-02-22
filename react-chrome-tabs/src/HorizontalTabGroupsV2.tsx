@@ -45,11 +45,18 @@ interface ContextMenuState {
   y: number;
   tabId: string;
   groupId: string;
+  isGroupLabel?: boolean;
 }
 
 interface ConfirmDialog {
   message: string;
   options: Array<{ label: string; action: () => void; variant?: 'primary' | 'danger' }>;
+}
+
+interface RenameDialog {
+  targetId: string;
+  targetType: 'tab' | 'group';
+  currentName: string;
 }
 
 // ============================================================================
@@ -67,6 +74,7 @@ export function HorizontalTabGroupsV2({ initialState, darkMode = false }: Horizo
   );
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
   const [confirmDialog, setConfirmDialog] = useState<ConfirmDialog | null>(null);
+  const [renameDialog, setRenameDialog] = useState<RenameDialog | null>(null);
 
   // Build visual tab list: group labels + visible tabs
   const visualTabs = useMemo(() => {
@@ -136,8 +144,18 @@ export function HorizontalTabGroupsV2({ initialState, darkMode = false }: Horizo
   const handleContextMenu = (tabId: string, event: MouseEvent) => {
     event.preventDefault();
 
-    // Ignore if it's a group label
-    if (tabId.startsWith('group-label-')) return;
+    // Check if it's a group label
+    if (tabId.startsWith('group-label-')) {
+      const groupId = tabId.replace('group-label-', '');
+      setContextMenu({
+        x: event.clientX,
+        y: event.clientY,
+        tabId,
+        groupId,
+        isGroupLabel: true,
+      });
+      return;
+    }
 
     const tab = state.tabs.find((t) => t.id === tabId);
     if (!tab) return;
@@ -147,6 +165,7 @@ export function HorizontalTabGroupsV2({ initialState, darkMode = false }: Horizo
       y: event.clientY,
       tabId,
       groupId: tab.groupId,
+      isGroupLabel: false,
     });
   };
 
@@ -240,6 +259,52 @@ export function HorizontalTabGroupsV2({ initialState, darkMode = false }: Horizo
     setContextMenu(null);
   };
 
+  const handleRename = () => {
+    if (!contextMenu) return;
+
+    if (contextMenu.isGroupLabel) {
+      const group = state.groups.find((g) => g.id === contextMenu.groupId);
+      if (!group) return;
+      setRenameDialog({
+        targetId: group.id,
+        targetType: 'group',
+        currentName: group.label,
+      });
+    } else {
+      const tab = state.tabs.find((t) => t.id === contextMenu.tabId);
+      if (!tab) return;
+      setRenameDialog({
+        targetId: tab.id,
+        targetType: 'tab',
+        currentName: tab.customName || tab.title,
+      });
+    }
+
+    setContextMenu(null);
+  };
+
+  const handleRenameSubmit = (newName: string) => {
+    if (!renameDialog) return;
+
+    if (renameDialog.targetType === 'group') {
+      setState((prev) => ({
+        ...prev,
+        groups: prev.groups.map((g) =>
+          g.id === renameDialog.targetId ? { ...g, label: newName } : g
+        ),
+      }));
+    } else {
+      setState((prev) => ({
+        ...prev,
+        tabs: prev.tabs.map((t) =>
+          t.id === renameDialog.targetId ? { ...t, customName: newName } : t
+        ),
+      }));
+    }
+
+    setRenameDialog(null);
+  };
+
   return (
     <div
       style={{
@@ -275,12 +340,22 @@ export function HorizontalTabGroupsV2({ initialState, darkMode = false }: Horizo
           }}
           onClick={(e) => e.stopPropagation()}
         >
-          <MenuItem onClick={handleDuplicateTab}>Duplicate Tab</MenuItem>
-          <MenuItem onClick={handleNewTabInGroup}>New Tab in Group</MenuItem>
-          <MenuDivider />
-          <MenuItem onClick={handleCloseTab} danger>
-            Close Tab
-          </MenuItem>
+          {contextMenu.isGroupLabel ? (
+            <>
+              <MenuItem onClick={handleRename}>Rename Group</MenuItem>
+              <MenuItem onClick={handleNewTabInGroup}>New Tab in Group</MenuItem>
+            </>
+          ) : (
+            <>
+              <MenuItem onClick={handleRename}>Rename Tab</MenuItem>
+              <MenuItem onClick={handleDuplicateTab}>Duplicate Tab</MenuItem>
+              <MenuItem onClick={handleNewTabInGroup}>New Tab in Group</MenuItem>
+              <MenuDivider />
+              <MenuItem onClick={handleCloseTab} danger>
+                Close Tab
+              </MenuItem>
+            </>
+          )}
         </div>
       )}
 
@@ -341,18 +416,109 @@ export function HorizontalTabGroupsV2({ initialState, darkMode = false }: Horizo
         </div>
       )}
 
-      {/* Visual styling for group labels */}
+      {/* Rename Dialog */}
+      {renameDialog && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0,0,0,0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 2000,
+          }}
+          onClick={() => setRenameDialog(null)}
+        >
+          <div
+            style={{
+              backgroundColor: '#fff',
+              padding: '24px',
+              borderRadius: '8px',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+              maxWidth: '400px',
+              minWidth: '300px',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ marginBottom: '16px', fontSize: '14px', fontWeight: 500 }}>
+              Rename {renameDialog.targetType === 'group' ? 'Group' : 'Tab'}
+            </div>
+            <input
+              type="text"
+              defaultValue={renameDialog.currentName}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  handleRenameSubmit(e.currentTarget.value);
+                } else if (e.key === 'Escape') {
+                  setRenameDialog(null);
+                }
+              }}
+              style={{
+                width: '100%',
+                padding: '8px',
+                marginBottom: '16px',
+                border: '1px solid #ccc',
+                borderRadius: '4px',
+                fontSize: '13px',
+              }}
+              autoFocus
+            />
+            <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => setRenameDialog(null)}
+                style={{
+                  padding: '8px 16px',
+                  backgroundColor: '#f0f0f0',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={(e) => {
+                  const input = e.currentTarget.parentElement?.previousElementSibling as HTMLInputElement;
+                  handleRenameSubmit(input.value);
+                }}
+                style={{
+                  padding: '8px 16px',
+                  backgroundColor: '#4285f4',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                }}
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Visual styling for group labels and collapsed groups */}
       <style>{`
         .chrome-tab[data-tab-id^="group-label-"] {
           background: linear-gradient(to bottom, #e8eaed 0%, #dadce0 100%) !important;
           font-weight: 600;
           cursor: pointer;
+          max-width: 80px !important;
+          min-width: 50px !important;
         }
         .chrome-tab[data-tab-id^="group-label-"] .chrome-tab-background {
           display: none;
         }
         .chrome-tab[data-tab-id^="group-label-"]:hover {
           background: linear-gradient(to bottom, #d0d3d8 0%, #c8cbcf 100%) !important;
+        }
+        .chrome-tab[data-tab-id^="group-label-"] .chrome-tab-title {
+          font-size: 11px !important;
+          font-weight: 600 !important;
         }
       `}</style>
     </div>
