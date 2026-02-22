@@ -100,7 +100,7 @@ export function IframePanel({ tabGroup, onUpdatePairRatios }: IframePanelProps) 
   }
 
   return (
-    <>
+    <div className="flex flex-col flex-1 min-h-0">
       {/*
         Step 1: Render all iframe contents in InPortals
         These iframes are created once and stay in memory
@@ -155,7 +155,7 @@ export function IframePanel({ tabGroup, onUpdatePairRatios }: IframePanelProps) 
       ) : (
         <EmptyView />
       )}
-    </>
+    </div>
   );
 }
 
@@ -175,7 +175,7 @@ function SingleTabView({
   const isLoaded = loadingState.get(activeTab.id) ?? false;
 
   return (
-    <div className="flex-1 min-h-0 relative">
+    <div className="flex-1 min-h-0 relative h-full">
       {portalNode && <OutPortal node={portalNode} />}
       {!isLoaded && <LoadingOverlay />}
     </div>
