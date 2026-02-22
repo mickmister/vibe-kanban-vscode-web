@@ -21,4 +21,5 @@ pnpm i
 
 # npm run dev
 
-npm run storybook
+npm run storybook:dev
+# npm run storybook
