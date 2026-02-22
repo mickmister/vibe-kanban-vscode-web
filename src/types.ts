@@ -10,7 +10,7 @@ export interface TabPair {
   id: string;
   /** Tab IDs in this pair, rendered side-by-side */
   tabIds: string[];
-  /** Flex ratios for each tab (e.g., [3, 1] for 75%/25% split) */
+  /** Percentage sizes for each tab (e.g., [75, 25] for 75%/25% split) */
   ratios: number[];
 }
 
@@ -65,25 +65,25 @@ export function createDefaultWorkspace(): WorkspaceState {
         label: 'Editor',
         activeItemId: 'tab_1',
         tabs: [
-          {
-            id: 'tab_1',
-            title: 'Code',
-            url: 'https://jamtools.dev/?folder=/var/tmp/vibe-kanban/worktrees/6c2d-vk-wrapper-app/vibe-kanban-vscode-web',
-            pinned: true,
-          },
-          {
-            id: 'tab_2',
-            title: 'Kanban',
-            url: 'https://jamtools.dev/workspaces/6c2d379f-71b7-4884-a1f7-7e431e2257fe',
-            pinned: false,
-          },
+          // {
+          //   id: 'tab_1',
+          //   title: 'Code',
+          //   url: 'https://jamtools.dev/?folder=/var/tmp/vibe-kanban/worktrees/6c2d-vk-wrapper-app/vibe-kanban-vscode-web',
+          //   pinned: true,
+          // },
+          // {
+          //   id: 'tab_2',
+          //   title: 'Kanban',
+          //   url: 'https://jamtools.dev/workspaces/6c2d379f-71b7-4884-a1f7-7e431e2257fe',
+          //   pinned: false,
+          // },
         ],
         pairs: [
-          {
-            id: 'pair_1',
-            tabIds: ['tab_1', 'tab_2'],
-            ratios: [3, 1],
-          },
+          // {
+          //   id: 'pair_1',
+          //   tabIds: ['tab_1', 'tab_2'],
+          //   ratios: [75, 25],
+          // },
         ],
         order: 0,
       },

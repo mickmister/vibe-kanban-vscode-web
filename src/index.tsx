@@ -1,11 +1,14 @@
 import './styles';
 
 import React from 'react';
-import { HeroUIProvider } from '@heroui/react';
 import springboard from 'springboard';
-import { WorkspaceShell } from './components/WorkspaceShell';
 import { createDefaultWorkspace } from './types';
 import type { WorkspaceState } from './types';
+
+// @platform "browser"
+import { HeroUIProvider } from '@heroui/react';
+import { WorkspaceShell } from './components/WorkspaceShell';
+// @platform end
 
 console.log('outside of module')
 springboard.registerModule('workspace', {rpcMode: 'remote'}, async (moduleAPI) => {
@@ -37,7 +40,7 @@ springboard.registerModule('workspace', {rpcMode: 'remote'}, async (moduleAPI) =
           id: tgId,
           label: 'Main',
           activeItemId: tabId,
-          tabs: [{ id: tabId, title: 'New Tab', url: 'https://jamtools.dev/' }],
+          tabs: [],
           pairs: [],
           order: 0,
         });
@@ -137,7 +140,7 @@ springboard.registerModule('workspace', {rpcMode: 'remote'}, async (moduleAPI) =
         if (!tg) return;
 
         const pairId = `pair_${draft.nextId++}`;
-        const ratios = args.tabIds.map(() => 1);
+        const ratios = args.tabIds.map(() => 100 / args.tabIds.length);
         tg.pairs.push({ id: pairId, tabIds: args.tabIds, ratios });
         tg.activeItemId = pairId;
       });
