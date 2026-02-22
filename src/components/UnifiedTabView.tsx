@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useCallback, useRef, useEffect } from 'react';
 import { ChromeTabs } from '../../react-chrome-tabs/src/ChromeTabs';
 import type { TabProperties } from '../../react-chrome-tabs/src/chrome-tabs';
 import { AddressBar } from './AddressBar';
@@ -14,10 +14,12 @@ interface UnifiedTabViewProps {
 }
 
 /**
- * Unified tab view following HorizontalTabGroupsV2 pattern:
- * - Single ChromeTabs instance with group labels as special tabs
- * - Single AddressBar showing active tab URL
- * - Single IframePanel showing active tab group content
+ * Unified tab view with auto-hiding top bar:
+ * - Address bar at the very top
+ * - Chrome tabs below address bar
+ * - Auto-hide on mouse leave, show on hover at top of page
+ * - Pin toggle to keep bar visible
+ * - Content adjusts position based on pinned state
  */
 export function UnifiedTabView({
   tabGroups,
@@ -25,6 +27,13 @@ export function UnifiedTabView({
   actions,
   onOpenAddTabModal,
 }: UnifiedTabViewProps) {
+  const [isPinned, setIsPinned] = useState(false);
+  const [isHovering, setIsHovering] = useState(false);
+  const topBarRef = useRef<HTMLDivElement>(null);
+  const hoverTriggerRef = useRef<HTMLDivElement>(null);
+
+  const isVisible = isPinned || isHovering;
+
   // Build visual tabs: group labels + tabs from expanded groups
   const visualTabs = useMemo(() => {
     const result: (TabProperties & {
@@ -133,40 +142,76 @@ export function UnifiedTabView({
 
   const activeTabGroup = tabGroups.find((tg) => tg.id === activeTabGroupId);
 
+  // Calculate top bar height for content offset when pinned
+  const topBarHeight = topBarRef.current?.offsetHeight || 0;
+
   return (
-    <div className="flex flex-col flex-1 min-h-0">
-      {/* Single Chrome tabs instance for all groups */}
-      <div className="bg-neutral-900 border-b border-neutral-800">
-        <ChromeTabs
-          tabs={visualTabs}
-          darkMode={true}
-          onTabActive={handleTabActive}
-          onTabClose={handleTabClose}
-          onContextMenu={handleContextMenu}
-          draggable={true}
-        />
+    <div className="flex flex-col flex-1 min-h-0 relative">
+      {/* Invisible hover trigger at top of viewport */}
+      <div
+        ref={hoverTriggerRef}
+        className="absolute top-0 left-0 right-0 h-2 z-40"
+        onMouseEnter={() => setIsHovering(true)}
+      />
+
+      {/* Auto-hiding top bar container */}
+      <div
+        ref={topBarRef}
+        className={`absolute top-0 left-0 right-0 z-50 transition-transform duration-200 ${
+          isVisible ? 'translate-y-0' : '-translate-y-full'
+        }`}
+        onMouseEnter={() => setIsHovering(true)}
+        onMouseLeave={() => setIsHovering(false)}
+      >
+        {/* Address bar at the very top */}
+        {activeTabGroup && <AddressBar tabGroup={activeTabGroup} />}
+
+        {/* Chrome tabs below address bar */}
+        <div className="bg-neutral-900 border-b border-neutral-800">
+          <ChromeTabs
+            tabs={visualTabs}
+            darkMode={true}
+            onTabActive={handleTabActive}
+            onTabClose={handleTabClose}
+            onContextMenu={handleContextMenu}
+            draggable={true}
+          />
+        </div>
+
+        {/* Pin toggle button */}
+        <button
+          onClick={() => setIsPinned(!isPinned)}
+          className="absolute bottom-2 right-2 bg-neutral-800 hover:bg-neutral-700 text-neutral-300 px-2 py-1 rounded text-xs transition-colors"
+          title={isPinned ? 'Unpin top bar' : 'Pin top bar'}
+        >
+          {isPinned ? '📌' : '📍'}
+        </button>
       </div>
 
-      {/* Address bar showing active tab URL */}
-      {activeTabGroup && <AddressBar tabGroup={activeTabGroup} />}
-
-      {/* Content area showing active tab group's iframe panel */}
-      {activeTabGroup ? (
-        <IframePanel
-          tabGroup={activeTabGroup}
-          onUpdatePairRatios={(pairId, ratios) =>
-            actions.updatePairRatios({
-              tabGroupId: activeTabGroup.id,
-              pairId,
-              ratios,
-            })
-          }
-        />
-      ) : (
-        <div className="flex-1 flex items-center justify-center text-neutral-500">
-          <p>No tab group selected</p>
-        </div>
-      )}
+      {/* Content area - adjusts top padding based on pinned state */}
+      <div
+        className="flex-1 min-h-0 transition-all duration-200"
+        style={{
+          paddingTop: isPinned ? `${topBarHeight}px` : '0px',
+        }}
+      >
+        {activeTabGroup ? (
+          <IframePanel
+            tabGroup={activeTabGroup}
+            onUpdatePairRatios={(pairId, ratios) =>
+              actions.updatePairRatios({
+                tabGroupId: activeTabGroup.id,
+                pairId,
+                ratios,
+              })
+            }
+          />
+        ) : (
+          <div className="flex-1 flex items-center justify-center text-neutral-500">
+            <p>No tab group selected</p>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
