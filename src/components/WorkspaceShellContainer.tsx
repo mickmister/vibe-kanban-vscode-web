@@ -314,13 +314,13 @@ function createDefaultWorkspace(): WorkspaceState {
           {
             id: 'tab_1',
             title: 'Code',
-            url: 'https://jamtools.dev',
+            url: 'https://jamtools.dev/?folder=/var/tmp/vibe-kanban/worktrees/47a8-clone-and-use-re',
             pinned: true,
           },
           {
             id: 'tab_2',
             title: 'Kanban',
-            url: 'https://jamtools.dev/workspaces',
+            url: 'https://jamtools.dev/workspaces/47a8ec6f-047d-461a-b5bb-f735b3ae4a67',
             pinned: false,
           },
         ],

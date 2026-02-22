@@ -1,5 +1,5 @@
 import React from 'react';
-import { TabBar } from './TabBar';
+import { ChromeTabBar } from './ChromeTabBar';
 import { IframePanel } from './IframePanel';
 import type { TabGroup } from '../types';
 
@@ -39,7 +39,7 @@ export function TabGroupPanel({
       }`}
       onClick={onSetActive}
     >
-      <TabBar
+      <ChromeTabBar
         tabGroup={tabGroup}
         onSelectTab={onSelectTab}
         onSelectPair={onSelectPair}
