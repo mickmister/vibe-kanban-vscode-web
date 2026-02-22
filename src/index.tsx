@@ -1,4 +1,4 @@
-import './styles.css';
+import './styles';
 
 import React from 'react';
 import { HeroUIProvider } from '@heroui/react';

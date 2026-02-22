@@ -1,6 +1,5 @@
 import type { Preview } from '@storybook/react-vite'
-import '../react-chrome-tabs/css/chrome-tabs.css'
-import '../react-chrome-tabs/css/chrome-tabs-dark-theme.css'
+import '../src/styles'
 
 const preview: Preview = {
   parameters: {
