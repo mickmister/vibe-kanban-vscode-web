@@ -1,6 +1,6 @@
 import React from 'react';
-import { TabGroupPanel } from './TabGroupPanel';
-import type { TabGroup, WorkspaceState } from '../types';
+import { UnifiedTabView } from './UnifiedTabView';
+import type { TabGroup } from '../types';
 import type { WorkspaceActions } from './WorkspaceShell';
 
 interface WorkspaceContentViewProps {
@@ -33,26 +33,11 @@ export function WorkspaceContentView({
   }
 
   return (
-    <div className="flex flex-row gap-2 flex-1 min-h-0 overflow-x-auto p-2">
-      {activeTabGroups.map((tg) => (
-        <TabGroupPanel
-          key={tg.id}
-          tabGroup={tg}
-          isActive={activeTabGroupId === tg.id}
-          onSetActive={() => actions.setActiveTabGroup({ tabGroupId: tg.id })}
-          onSelectTab={(tabId) => actions.selectTab({ tabGroupId: tg.id, tabId })}
-          onSelectPair={(pairId) => actions.selectPair({ tabGroupId: tg.id, pairId })}
-          onCloseTab={(tabId) => actions.closeTab({ tabGroupId: tg.id, tabId })}
-          onAddTab={() => onOpenAddTabModal(tg.id)}
-          onCreatePair={(tabIds) => actions.createPair({ tabGroupId: tg.id, tabIds })}
-          onUpdatePairRatios={(pairId, ratios) =>
-            actions.updatePairRatios({ tabGroupId: tg.id, pairId, ratios })
-          }
-          onDragStart={onDragStart}
-          onDragOver={onDragOver}
-          onDrop={onDrop}
-        />
-      ))}
-    </div>
+    <UnifiedTabView
+      tabGroups={activeTabGroups}
+      activeTabGroupId={activeTabGroupId}
+      actions={actions}
+      onOpenAddTabModal={onOpenAddTabModal}
+    />
   );
 }
