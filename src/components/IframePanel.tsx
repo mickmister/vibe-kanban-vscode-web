@@ -37,30 +37,6 @@ function useIframePortals(tabs: Tab[]) {
   return portalsRef.current;
 }
 
-/**
- * IframeView - Renders iframe content in a portal
- * The portal allows the iframe to be "moved" without reloading
- */
-function IframeView({ tab, portalNode }: { tab: Tab; portalNode: ReturnType<typeof createHtmlPortalNode> }) {
-  return (
-    <>
-      {/* InPortal renders the iframe content once */}
-      <InPortal node={portalNode}>
-        <iframe
-          src={tab.url}
-          title={tab.title}
-          className="w-full h-full border-0"
-          sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals"
-          allow="clipboard-read; clipboard-write; fullscreen"
-          role="region"
-        />
-      </InPortal>
-      {/* OutPortal "moves" the iframe to this location */}
-      <OutPortal node={portalNode} />
-    </>
-  );
-}
-
 export function IframePanel({ tabGroup, onUpdatePairRatios }: IframePanelProps) {
   // Create and maintain portal nodes for all tabs
   // This ensures iframes stay alive even when hidden
@@ -73,112 +49,145 @@ export function IframePanel({ tabGroup, onUpdatePairRatios }: IframePanelProps) 
     (p) => p.id === tabGroup.activeItemId
   );
 
+  // Get IDs of currently visible tabs
+  const visibleTabIds = new Set<string>();
   if (activePair) {
-    const pairTabs = activePair.tabIds
-      .map((id) => tabGroup.tabs.find((t) => t.id === id))
-      .filter((t): t is Tab => t != null);
-
-    // ratios are already percentages in our data model
-    const percentages = activePair.ratios;
-
-    // Handle layout changes from the Group component
-    const handleLayoutChange = (layout: { [id: string]: number }) => {
-      // Convert layout object back to array based on tab order
-      const newRatios = pairTabs.map((tab) => layout[tab.id] || 0);
-      onUpdatePairRatios(activePair.id, newRatios);
-    };
-
-    return (
-      <>
-        {/* Render all tab iframes off-screen with display:none when not active */}
-        {tabGroup.tabs.map((tab) => {
-          const portalNode = portals.get(tab.id);
-          if (!portalNode) return null;
-          const isVisible = pairTabs.some((t) => t.id === tab.id);
-
-          return (
-            <div
-              key={tab.id}
-              style={{ display: isVisible ? 'none' : 'none' }}
-            >
-              <InPortal node={portalNode}>
-                <iframe
-                  src={tab.url}
-                  title={tab.title}
-                  className="w-full h-full border-0"
-                  sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals"
-                  allow="clipboard-read; clipboard-write; fullscreen"
-                  role="region"
-                />
-              </InPortal>
-            </div>
-          );
-        })}
-
-        {/* Display active pair tabs */}
-        <Group
-          orientation="horizontal"
-          className="flex-1 min-h-0"
-          onLayoutChanged={handleLayoutChange}
-        >
-          {pairTabs.map((tab, i) => {
-            const portalNode = portals.get(tab.id);
-            if (!portalNode) return null;
-
-            return (
-              <React.Fragment key={tab.id}>
-                <Panel id={tab.id} defaultSize={percentages[i]} minSize={10}>
-                  <OutPortal node={portalNode} />
-                </Panel>
-                {i < pairTabs.length - 1 && (
-                  <Separator className="w-1 bg-neutral-700 hover:bg-neutral-500 data-[resize-handle-state=drag]:bg-primary-500 transition-colors cursor-col-resize flex-shrink-0" />
-                )}
-              </React.Fragment>
-            );
-          })}
-        </Group>
-      </>
-    );
+    activePair.tabIds.forEach((id) => visibleTabIds.add(id));
+  } else if (activeTab) {
+    visibleTabIds.add(activeTab.id);
   }
 
-  if (activeTab) {
-    const portalNode = portals.get(activeTab.id);
+  return (
+    <>
+      {/*
+        Step 1: Render all iframe contents in InPortals
+        These iframes are created once and stay in memory
+      */}
+      {tabGroup.tabs.map((tab) => {
+        const portalNode = portals.get(tab.id);
+        if (!portalNode) return null;
 
-    return (
-      <>
-        {/* Render all tab iframes off-screen with display:none when not active */}
-        {tabGroup.tabs.map((tab) => {
-          const node = portals.get(tab.id);
-          if (!node) return null;
-          const isVisible = tab.id === activeTab.id;
+        return (
+          <InPortal key={tab.id} node={portalNode}>
+            <iframe
+              src={tab.url}
+              title={tab.title}
+              className="w-full h-full border-0"
+              sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals"
+              allow="clipboard-read; clipboard-write; fullscreen"
+              role="region"
+            />
+          </InPortal>
+        );
+      })}
 
-          return (
-            <div
-              key={tab.id}
-              style={{ display: isVisible ? 'none' : 'none' }}
-            >
-              <InPortal node={node}>
-                <iframe
-                  src={tab.url}
-                  title={tab.title}
-                  className="w-full h-full border-0"
-                  sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals"
-                  allow="clipboard-read; clipboard-write; fullscreen"
-                  role="region"
-                />
-              </InPortal>
-            </div>
-          );
-        })}
+      {/*
+        Step 2: Render hidden OutPortals for non-visible tabs
+        Using display:none keeps iframes running in background
+      */}
+      {tabGroup.tabs.map((tab) => {
+        const portalNode = portals.get(tab.id);
+        if (!portalNode || visibleTabIds.has(tab.id)) return null;
 
-        {/* Display active tab */}
-        <div className="flex-1 min-h-0">
-          {portalNode && <OutPortal node={portalNode} />}
-        </div>
-      </>
-    );
-  }
+        return (
+          <div key={`hidden-${tab.id}`} style={{ display: 'none' }}>
+            <OutPortal node={portalNode} />
+          </div>
+        );
+      })}
 
+      {/*
+        Step 3: Render visible tab(s) - either single tab or split pair
+      */}
+      {activePair ? (
+        <PairView
+          activePair={activePair}
+          tabGroup={tabGroup}
+          portals={portals}
+          onUpdatePairRatios={onUpdatePairRatios}
+        />
+      ) : activeTab ? (
+        <SingleTabView activeTab={activeTab} portals={portals} />
+      ) : (
+        <EmptyView />
+      )}
+    </>
+  );
+}
+
+/**
+ * Renders a single active tab
+ */
+function SingleTabView({
+  activeTab,
+  portals,
+}: {
+  activeTab: Tab;
+  portals: Map<string, ReturnType<typeof createHtmlPortalNode>>;
+}) {
+  const portalNode = portals.get(activeTab.id);
+
+  return (
+    <div className="flex-1 min-h-0">
+      {portalNode && <OutPortal node={portalNode} />}
+    </div>
+  );
+}
+
+/**
+ * Renders a split pair of tabs
+ */
+function PairView({
+  activePair,
+  tabGroup,
+  portals,
+  onUpdatePairRatios,
+}: {
+  activePair: { id: string; tabIds: string[]; ratios: number[] };
+  tabGroup: TabGroup;
+  portals: Map<string, ReturnType<typeof createHtmlPortalNode>>;
+  onUpdatePairRatios: (pairId: string, ratios: number[]) => void;
+}) {
+  const pairTabs = activePair.tabIds
+    .map((id) => tabGroup.tabs.find((t) => t.id === id))
+    .filter((t): t is Tab => t != null);
+
+  const percentages = activePair.ratios;
+
+  const handleLayoutChange = (layout: { [id: string]: number }) => {
+    const newRatios = pairTabs.map((tab) => layout[tab.id] || 0);
+    onUpdatePairRatios(activePair.id, newRatios);
+  };
+
+  return (
+    <Group
+      orientation="horizontal"
+      className="flex-1 min-h-0"
+      onLayoutChanged={handleLayoutChange}
+    >
+      {pairTabs.map((tab, i) => {
+        const portalNode = portals.get(tab.id);
+        if (!portalNode) return null;
+
+        return (
+          <React.Fragment key={tab.id}>
+            <Panel id={tab.id} defaultSize={percentages[i]} minSize={10}>
+              <OutPortal node={portalNode} />
+            </Panel>
+            {i < pairTabs.length - 1 && (
+              <Separator className="w-1 bg-neutral-700 hover:bg-neutral-500 data-[resize-handle-state=drag]:bg-primary-500 transition-colors cursor-col-resize flex-shrink-0" />
+            )}
+          </React.Fragment>
+        );
+      })}
+    </Group>
+  );
+}
+
+/**
+ * Renders empty state when no tab is selected
+ */
+function EmptyView() {
   return (
     <div className="flex-1 flex items-center justify-center text-neutral-500">
       <p>No tab selected. Click + to add a tab.</p>
