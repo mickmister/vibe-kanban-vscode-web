@@ -34,12 +34,11 @@ springboard.registerModule('workspace', {rpcMode: 'remote'}, async (moduleAPI) =
       workspaceState.setStateImmer((draft) => {
         const id = `space_${draft.nextId++}`;
         const tgId = `tg_${draft.nextId++}`;
-        const tabId = `tab_${draft.nextId++}`;
 
         draft.tabGroups.push({
           id: tgId,
           label: 'Main',
-          activeItemId: tabId,
+          activeItemId: '',
           tabs: [],
           pairs: [],
           order: 0,
