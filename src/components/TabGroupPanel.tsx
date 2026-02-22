@@ -1,5 +1,6 @@
 import React from 'react';
 import { ChromeTabBar } from './ChromeTabBar';
+import { AddressBar } from './AddressBar';
 import { IframePanel } from './IframePanel';
 import type { TabGroup } from '../types';
 
@@ -50,6 +51,7 @@ export function TabGroupPanel({
         onDragOver={onDragOver}
         onDrop={onDrop}
       />
+      <AddressBar tabGroup={tabGroup} />
       <IframePanel
         tabGroup={tabGroup}
         onUpdatePairRatios={onUpdatePairRatios}

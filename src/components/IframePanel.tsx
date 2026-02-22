@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { Group, Panel, Separator } from 'react-resizable-panels';
 import { createHtmlPortalNode, InPortal, OutPortal } from 'react-reverse-portal';
 import type { TabGroup, Tab } from '../types';
@@ -37,10 +37,52 @@ function useIframePortals(tabs: Tab[]) {
   return portalsRef.current;
 }
 
+/**
+ * Hook to track loading state of iframes
+ */
+function useIframeLoading(tabs: Tab[]) {
+  const [loadingState, setLoadingState] = useState<Map<string, boolean>>(new Map());
+
+  useEffect(() => {
+    // Initialize loading state for new tabs
+    setLoadingState((prev) => {
+      const next = new Map(prev);
+      const currentTabIds = new Set(tabs.map((tab) => tab.id));
+
+      // Remove state for deleted tabs
+      for (const [id] of next.entries()) {
+        if (!currentTabIds.has(id)) {
+          next.delete(id);
+        }
+      }
+
+      // Add loading state for new tabs (starts as loading)
+      for (const tab of tabs) {
+        if (!next.has(tab.id)) {
+          next.set(tab.id, false); // false = still loading
+        }
+      }
+
+      return next;
+    });
+  }, [tabs]);
+
+  const handleLoad = useCallback((tabId: string) => {
+    setLoadingState((prev) => {
+      const next = new Map(prev);
+      next.set(tabId, true); // true = loaded
+      return next;
+    });
+  }, []);
+
+  return { loadingState, handleLoad };
+}
+
 export function IframePanel({ tabGroup, onUpdatePairRatios }: IframePanelProps) {
   // Create and maintain portal nodes for all tabs
   // This ensures iframes stay alive even when hidden
   const portals = useIframePortals(tabGroup.tabs);
+  const { loadingState, handleLoad } = useIframeLoading(tabGroup.tabs);
 
   const activeTab = tabGroup.tabs.find(
     (t) => t.id === tabGroup.activeItemId
@@ -76,6 +118,7 @@ export function IframePanel({ tabGroup, onUpdatePairRatios }: IframePanelProps) 
               sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals"
               allow="clipboard-read; clipboard-write; fullscreen"
               role="region"
+              onLoad={() => handleLoad(tab.id)}
             />
           </InPortal>
         );
@@ -104,10 +147,11 @@ export function IframePanel({ tabGroup, onUpdatePairRatios }: IframePanelProps) 
           activePair={activePair}
           tabGroup={tabGroup}
           portals={portals}
+          loadingState={loadingState}
           onUpdatePairRatios={onUpdatePairRatios}
         />
       ) : activeTab ? (
-        <SingleTabView activeTab={activeTab} portals={portals} />
+        <SingleTabView activeTab={activeTab} portals={portals} loadingState={loadingState} />
       ) : (
         <EmptyView />
       )}
@@ -121,15 +165,19 @@ export function IframePanel({ tabGroup, onUpdatePairRatios }: IframePanelProps) 
 function SingleTabView({
   activeTab,
   portals,
+  loadingState,
 }: {
   activeTab: Tab;
   portals: Map<string, ReturnType<typeof createHtmlPortalNode>>;
+  loadingState: Map<string, boolean>;
 }) {
   const portalNode = portals.get(activeTab.id);
+  const isLoaded = loadingState.get(activeTab.id) ?? false;
 
   return (
-    <div className="flex-1 min-h-0">
+    <div className="flex-1 min-h-0 relative">
       {portalNode && <OutPortal node={portalNode} />}
+      {!isLoaded && <LoadingOverlay />}
     </div>
   );
 }
@@ -141,11 +189,13 @@ function PairView({
   activePair,
   tabGroup,
   portals,
+  loadingState,
   onUpdatePairRatios,
 }: {
   activePair: { id: string; tabIds: string[]; ratios: number[] };
   tabGroup: TabGroup;
   portals: Map<string, ReturnType<typeof createHtmlPortalNode>>;
+  loadingState: Map<string, boolean>;
   onUpdatePairRatios: (pairId: string, ratios: number[]) => void;
 }) {
   const pairTabs = activePair.tabIds
@@ -167,12 +217,16 @@ function PairView({
     >
       {pairTabs.map((tab, i) => {
         const portalNode = portals.get(tab.id);
+        const isLoaded = loadingState.get(tab.id) ?? false;
         if (!portalNode) return null;
 
         return (
           <React.Fragment key={tab.id}>
             <Panel id={tab.id} defaultSize={percentages[i]} minSize={10}>
-              <OutPortal node={portalNode} />
+              <div className="relative w-full h-full">
+                <OutPortal node={portalNode} />
+                {!isLoaded && <LoadingOverlay />}
+              </div>
             </Panel>
             {i < pairTabs.length - 1 && (
               <Separator className="w-1 bg-neutral-700 hover:bg-neutral-500 data-[resize-handle-state=drag]:bg-primary-500 transition-colors cursor-col-resize flex-shrink-0" />
@@ -191,6 +245,20 @@ function EmptyView() {
   return (
     <div className="flex-1 flex items-center justify-center text-neutral-500">
       <p>No tab selected. Click + to add a tab.</p>
+    </div>
+  );
+}
+
+/**
+ * Loading overlay shown while iframe is loading
+ */
+function LoadingOverlay() {
+  return (
+    <div className="absolute inset-0 bg-neutral-950 flex items-center justify-center z-10">
+      <div className="flex flex-col items-center gap-3">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500"></div>
+        <p className="text-neutral-400 text-sm">Loading...</p>
+      </div>
     </div>
   );
 }
