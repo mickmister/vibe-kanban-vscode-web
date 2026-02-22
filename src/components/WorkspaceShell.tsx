@@ -27,12 +27,11 @@ export type WorkspaceActions = {
 };
 
 interface WorkspaceShellProps {
-  workspaceState: StateSupervisor<WorkspaceState>;
+  workspace: WorkspaceState;
   actions: WorkspaceActions;
 }
 
-export function WorkspaceShell({ workspaceState, actions }: WorkspaceShellProps) {
-  const workspace = workspaceState.useState();
+export function WorkspaceShell({ workspace, actions }: WorkspaceShellProps) {
   const [addTabModalOpen, setAddTabModalOpen] = useState(false);
   const [addTabTargetGroupId, setAddTabTargetGroupId] = useState<string>('');
   const dragGroupRef = useRef<string | null>(null);
