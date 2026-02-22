@@ -62,6 +62,7 @@ export interface TabProperties {
   favicon?: boolean | string;
   faviconClass?: string;
   isCloseIconVisible?: boolean;
+  tabCount?: number; // For group labels - shows count badge
 }
 
 let instanceId = 0;
@@ -453,6 +454,11 @@ class ChromeTabs {
 
     if (tabProperties.id) {
       tabEl.setAttribute("data-tab-id", tabProperties.id);
+    }
+
+    if (tabProperties.tabCount !== undefined) {
+      const titleEl = tabEl.querySelector(".chrome-tab-title");
+      titleEl?.setAttribute("data-tab-count", String(tabProperties.tabCount));
     }
   }
 

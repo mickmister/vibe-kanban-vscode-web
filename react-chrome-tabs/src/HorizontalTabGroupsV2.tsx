@@ -84,15 +84,16 @@ export function HorizontalTabGroupsV2({ initialState, darkMode = false }: Horizo
       const groupTabs = state.tabs.filter((t) => t.groupId === group.id);
       const tabCount = groupTabs.length;
 
-      // Add group label as a special "tab" with count badge
+      // Add group label as a special "tab" with count badge on left
       result.push({
         id: `group-label-${group.id}`,
-        title: `${group.label} (${tabCount})`,
+        title: group.label,
         active: false,
         isGroupLabel: true,
         groupId: group.id,
         tabCount,
         isCloseIconVisible: false,
+        favicon: false,
       });
 
       // Add tabs if group is not collapsed
@@ -511,10 +512,15 @@ export function HorizontalTabGroupsV2({ initialState, darkMode = false }: Horizo
           background: linear-gradient(to bottom, #e8eaed 0%, #dadce0 100%) !important;
           font-weight: 600;
           cursor: pointer;
-          max-width: 100px !important;
-          min-width: 60px !important;
-          border-left: 3px solid #5f6368;
-          padding-left: 8px !important;
+          max-width: 85px !important;
+          min-width: 85px !important;
+          width: 85px !important;
+          padding-left: 6px !important;
+          margin-right: 0 !important;
+        }
+
+        .chrome-tab[data-tab-id^="group-label-"] .chrome-tab-content {
+          padding-right: 6px !important;
         }
 
         .chrome-tab[data-tab-id^="group-label-"] .chrome-tab-background {
@@ -525,20 +531,43 @@ export function HorizontalTabGroupsV2({ initialState, darkMode = false }: Horizo
           background: linear-gradient(to bottom, #d0d3d8 0%, #c8cbcf 100%) !important;
         }
 
+        /* Count badge on the left */
+        .chrome-tab[data-tab-id^="group-label-"] .chrome-tab-title::before {
+          content: attr(data-tab-count);
+          display: inline-block;
+          width: 20px;
+          height: 20px;
+          line-height: 20px;
+          text-align: center;
+          background: #5f6368;
+          color: #fff;
+          border-radius: 50%;
+          font-size: 10px;
+          font-weight: 700;
+          margin-right: 6px;
+          flex-shrink: 0;
+        }
+
         .chrome-tab[data-tab-id^="group-label-"] .chrome-tab-title {
           font-size: 11px !important;
           font-weight: 600 !important;
           color: #5f6368 !important;
+          display: flex !important;
+          align-items: center !important;
         }
 
         /* Group label styling - dark mode */
         .chrome-tabs-dark-theme .chrome-tab[data-tab-id^="group-label-"] {
           background: linear-gradient(to bottom, #35363a 0%, #2d2e31 100%) !important;
-          border-left: 3px solid #8ab4f8;
         }
 
         .chrome-tabs-dark-theme .chrome-tab[data-tab-id^="group-label-"]:hover {
           background: linear-gradient(to bottom, #3c3d41 0%, #35363a 100%) !important;
+        }
+
+        .chrome-tabs-dark-theme .chrome-tab[data-tab-id^="group-label-"] .chrome-tab-title::before {
+          background: #8ab4f8;
+          color: #202124;
         }
 
         .chrome-tabs-dark-theme .chrome-tab[data-tab-id^="group-label-"] .chrome-tab-title {
