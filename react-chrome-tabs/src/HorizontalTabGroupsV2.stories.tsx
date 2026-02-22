@@ -35,15 +35,15 @@ const sampleState: HorizontalTabGroupsV2State = {
     },
   ],
   tabs: [
-    { id: 'w1', title: 'Gmail', groupId: 'work', active: true },
-    { id: 'w2', title: 'Google Drive', groupId: 'work', active: false },
-    { id: 'w3', title: 'Calendar', groupId: 'work', active: false },
-    { id: 'd1', title: 'GitHub', groupId: 'dev', active: false },
-    { id: 'd2', title: 'Stack Overflow', groupId: 'dev', active: false },
-    { id: 'd3', title: 'localhost:3000', groupId: 'dev', active: false },
-    { id: 'p1', title: 'YouTube', groupId: 'personal', active: false },
-    { id: 'p2', title: 'Reddit', groupId: 'personal', active: false },
-    { id: 'p3', title: 'Twitter', groupId: 'personal', active: false },
+    { id: 'w1', title: 'Gmail', groupId: 'work', active: true, loaded: true },
+    { id: 'w2', title: 'Google Drive', groupId: 'work', active: false, loaded: false },
+    { id: 'w3', title: 'Calendar', groupId: 'work', active: false, loaded: false },
+    { id: 'd1', title: 'GitHub', groupId: 'dev', active: false, loaded: true },
+    { id: 'd2', title: 'Stack Overflow', groupId: 'dev', active: false, loaded: false },
+    { id: 'd3', title: 'localhost:3000', groupId: 'dev', active: false, loaded: false },
+    { id: 'p1', title: 'YouTube', groupId: 'personal', active: false, loaded: false },
+    { id: 'p2', title: 'Reddit', groupId: 'personal', active: false, loaded: false },
+    { id: 'p3', title: 'Twitter', groupId: 'personal', active: false, loaded: false },
   ],
 };
 
@@ -114,12 +114,12 @@ export const InteractiveDemo: Story = {
           <h3>Interactive Features</h3>
           <ul>
             <li><strong>Click group label</strong> to collapse/expand horizontally</li>
-            <li><strong>Click tab</strong> to activate it</li>
+            <li><strong>Click tab</strong> to activate it (marks as loaded on first activation)</li>
             <li><strong>Right-click tab</strong> to open context menu:
               <ul>
                 <li>Duplicate Tab - creates a copy after current tab</li>
                 <li>New Tab in Group - adds new tab to same group</li>
-                <li>Close Tab - shows confirmation dialog</li>
+                <li>Close Tab - shows confirm dialog only if tab is loaded in memory</li>
               </ul>
             </li>
             <li><strong>Hover over tab</strong> to see close button (visual only - use right-click to close)</li>
@@ -131,6 +131,14 @@ export const InteractiveDemo: Story = {
             <li>Group labels are special "tabs" in the tab list</li>
             <li>Collapsed groups simply hide their tabs from visual list</li>
             <li>All chrome-tabs features work (drag, size, scroll, etc.)</li>
+          </ul>
+          <h3>Lazy Loading Strategy</h3>
+          <ul>
+            <li>Tabs NOT loaded until first activation (saves memory)</li>
+            <li>Once loaded, iframes stay in memory with display:none</li>
+            <li>Close dialog only shown for loaded tabs (has iframe)</li>
+            <li>Use React Portals to render iframes off-screen</li>
+            <li>Loading indicator shown until iframe onLoad fires</li>
           </ul>
         </div>
       </div>

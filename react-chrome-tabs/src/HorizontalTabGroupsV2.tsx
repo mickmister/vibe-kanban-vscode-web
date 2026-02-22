@@ -2,6 +2,21 @@ import React, { useState, useMemo } from 'react';
 import { ChromeTabs } from './ChromeTabs';
 import type { TabProperties } from './chrome-tabs';
 
+/**
+ * HorizontalTabGroupsV2 - Chrome-style tab groups with lazy-loaded iframes
+ *
+ * Iframe Rendering Strategy:
+ * - Tabs are NOT loaded until first activation (lazy load)
+ * - Once loaded, iframes stay in memory with display:none when inactive
+ * - Use React Portals (or "reverse-react-portals") to render iframes off-screen
+ * - Show loading indicator until iframe onLoad completes
+ * - Loaded iframes persist for instant tab switching
+ *
+ * Close Behavior:
+ * - Unloaded tabs: close immediately (no dialog)
+ * - Loaded tabs: show confirmation (iframe is in memory)
+ */
+
 // ============================================================================
 // TYPES
 // ============================================================================
@@ -16,6 +31,8 @@ export interface TabGroupMetadata {
 export interface TabWithGroup extends TabProperties {
   groupId: string;
   customName?: string; // For active tabs
+  loaded?: boolean; // Whether iframe has been loaded (lazy load on first activation)
+  url?: string; // URL to load in iframe
 }
 
 export interface HorizontalTabGroupsV2State {
@@ -95,12 +112,13 @@ export function HorizontalTabGroupsV2({ initialState, darkMode = false }: Horizo
       return;
     }
 
-    // Regular tab activation
+    // Regular tab activation - mark as loaded if first time
     setState((prev) => ({
       ...prev,
       tabs: prev.tabs.map((t) => ({
         ...t,
         active: t.id === tabId,
+        loaded: t.id === tabId ? true : t.loaded, // Mark as loaded on first activation
       })),
     }));
   };
@@ -186,26 +204,38 @@ export function HorizontalTabGroupsV2({ initialState, darkMode = false }: Horizo
   const handleCloseTab = () => {
     if (!contextMenu) return;
 
-    setConfirmDialog({
-      message: 'Are you sure you want to close this tab?',
-      options: [
-        {
-          label: 'Cancel',
-          action: () => setConfirmDialog(null),
-        },
-        {
-          label: 'Close Tab',
-          action: () => {
-            setState((prev) => ({
-              ...prev,
-              tabs: prev.tabs.filter((t) => t.id !== contextMenu.tabId),
-            }));
-            setConfirmDialog(null);
+    const tab = state.tabs.find((t) => t.id === contextMenu.tabId);
+    if (!tab) return;
+
+    // Only show confirm dialog if tab is loaded (has iframe in memory)
+    if (tab.loaded) {
+      setConfirmDialog({
+        message: 'This tab is loaded in memory. Close it?',
+        options: [
+          {
+            label: 'Cancel',
+            action: () => setConfirmDialog(null),
           },
-          variant: 'danger',
-        },
-      ],
-    });
+          {
+            label: 'Close Tab',
+            action: () => {
+              setState((prev) => ({
+                ...prev,
+                tabs: prev.tabs.filter((t) => t.id !== contextMenu.tabId),
+              }));
+              setConfirmDialog(null);
+            },
+            variant: 'danger',
+          },
+        ],
+      });
+    } else {
+      // Not loaded - just close immediately
+      setState((prev) => ({
+        ...prev,
+        tabs: prev.tabs.filter((t) => t.id !== contextMenu.tabId),
+      }));
+    }
 
     setContextMenu(null);
   };
