@@ -22,7 +22,7 @@ springboard.registerModule('workspace', {rpcMode: 'remote'}, async (moduleAPI) =
         draft.activeSpaceId = args.spaceId;
         const space = draft.spaces.find((s) => s.id === args.spaceId);
         if (space && space.tabGroupIds.length > 0) {
-          draft.activeTabGroupId = space.tabGroupIds[0];
+          draft.activeTabGroupId = space.tabGroupIds[0]!;
         }
       });
     },
@@ -207,7 +207,10 @@ springboard.registerModule('workspace', {rpcMode: 'remote'}, async (moduleAPI) =
     return (
       <>
         <div className="dark w-screen h-screen fixed inset-0">
-          <WorkspaceShell workspaceState={workspaceState} actions={actions} />
+          <WorkspaceShell
+            workspace={workspaceState.useState()}
+            actions={actions}
+          />
         </div>
       </>
     );

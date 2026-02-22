@@ -5,25 +5,20 @@ import { IframePanel } from './IframePanel';
 import { AddTabModal } from './AddTabModal';
 import type { WorkspaceState, TabGroup } from '../types';
 
-type StateSupervisor<T> = {
-  useState: () => T;
-  getState: () => T;
-};
-
 export type WorkspaceActions = {
-  selectSpace: (args: { spaceId: string }) => Promise<void>;
-  addSpace: (args: { name: string }) => Promise<void>;
-  deleteSpace: (args: { spaceId: string }) => Promise<void>;
-  renameSpace: (args: { spaceId: string; name: string }) => Promise<void>;
-  selectTab: (args: { tabGroupId: string; tabId: string }) => Promise<void>;
-  selectPair: (args: { tabGroupId: string; pairId: string }) => Promise<void>;
-  setActiveTabGroup: (args: { tabGroupId: string }) => Promise<void>;
-  closeTab: (args: { tabGroupId: string; tabId: string }) => Promise<void>;
-  addTab: (args: { tabGroupId: string; title: string; url: string }) => Promise<void>;
-  createPair: (args: { tabGroupId: string; tabIds: string[] }) => Promise<void>;
-  updatePairRatios: (args: { tabGroupId: string; pairId: string; ratios: number[] }) => Promise<void>;
-  reorderTabGroups: (args: { sourceId: string; targetId: string }) => Promise<void>;
-  closeActiveTab: (args: Record<string, never>) => Promise<void>;
+  selectSpace: (args: { spaceId: string }) => void;
+  addSpace: (args: { name: string }) => void;
+  deleteSpace: (args: { spaceId: string }) => void;
+  renameSpace: (args: { spaceId: string; name: string }) => void;
+  selectTab: (args: { tabGroupId: string; tabId: string }) => void;
+  selectPair: (args: { tabGroupId: string; pairId: string }) => void;
+  setActiveTabGroup: (args: { tabGroupId: string }) => void;
+  closeTab: (args: { tabGroupId: string; tabId: string }) => void;
+  addTab: (args: { tabGroupId: string; title: string; url: string }) => void;
+  createPair: (args: { tabGroupId: string; tabIds: string[] }) => void;
+  updatePairRatios: (args: { tabGroupId: string; pairId: string; ratios: number[] }) => void;
+  reorderTabGroups: (args: { sourceId: string; targetId: string }) => void;
+  closeActiveTab: (args: Record<string, never>) => void;
 };
 
 interface WorkspaceShellProps {
