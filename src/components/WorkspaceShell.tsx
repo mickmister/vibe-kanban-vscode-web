@@ -1,7 +1,6 @@
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Sidebar } from './Sidebar';
-import { TabBar } from './TabBar';
-import { IframePanel } from './IframePanel';
+import { WorkspaceContentView } from './WorkspaceContentView';
 import { AddTabModal } from './AddTabModal';
 import type { WorkspaceState, TabGroup } from '../types';
 
@@ -32,29 +31,23 @@ export function WorkspaceShell({ workspace, actions }: WorkspaceShellProps) {
   const dragGroupRef = useRef<string | null>(null);
 
   // --- Drag-and-drop for tab groups ---
-  const handleDragStart = useCallback(
-    (e: React.DragEvent, tabGroupId: string) => {
-      dragGroupRef.current = tabGroupId;
-      e.dataTransfer.effectAllowed = 'move';
-    },
-    []
-  );
+  const handleDragStart = (e: React.DragEvent, tabGroupId: string) => {
+    dragGroupRef.current = tabGroupId;
+    e.dataTransfer.effectAllowed = 'move';
+  };
 
-  const handleDragOver = useCallback((e: React.DragEvent) => {
+  const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
-  }, []);
+  };
 
-  const handleDrop = useCallback(
-    (e: React.DragEvent, targetGroupId: string) => {
-      e.preventDefault();
-      const sourceId = dragGroupRef.current;
-      if (!sourceId || sourceId === targetGroupId) return;
-      actions.reorderTabGroups({ sourceId, targetId: targetGroupId });
-      dragGroupRef.current = null;
-    },
-    [actions]
-  );
+  const handleDrop = (e: React.DragEvent, targetGroupId: string) => {
+    e.preventDefault();
+    const sourceId = dragGroupRef.current;
+    if (!sourceId || sourceId === targetGroupId) return;
+    actions.reorderTabGroups({ sourceId, targetId: targetGroupId });
+    dragGroupRef.current = null;
+  };
 
   // --- Cmd+W handler ---
   useEffect(() => {
@@ -72,17 +65,14 @@ export function WorkspaceShell({ workspace, actions }: WorkspaceShellProps) {
   }, [actions]);
 
   // --- Add tab modal handler ---
-  const openAddTabModal = useCallback((tabGroupId: string) => {
+  const openAddTabModal = (tabGroupId: string) => {
     setAddTabTargetGroupId(tabGroupId);
     setAddTabModalOpen(true);
-  }, []);
+  };
 
-  const handleAddTab = useCallback(
-    (title: string, url: string) => {
-      actions.addTab({ tabGroupId: addTabTargetGroupId, title, url });
-    },
-    [actions, addTabTargetGroupId]
-  );
+  const handleAddTab = (title: string, url: string) => {
+    actions.addTab({ tabGroupId: addTabTargetGroupId, title, url });
+  };
 
   // --- Derived state ---
   const activeSpace = workspace.spaces.find(
@@ -106,43 +96,15 @@ export function WorkspaceShell({ workspace, actions }: WorkspaceShellProps) {
 
       {/* Main content area */}
       <div className="flex-1 flex flex-col min-h-0">
-        {activeTabGroups.length === 0 ? (
-          <div className="flex-1 flex items-center justify-center text-neutral-500">
-            <p>
-              No tab groups in this space. Hover left to switch spaces.
-            </p>
-          </div>
-        ) : (
-          activeTabGroups.map((tg) => (
-            <div
-              key={tg.id}
-              className={`flex flex-col min-h-0 flex-1 ${
-                workspace.activeTabGroupId === tg.id
-                  ? 'ring-1 ring-primary-500/30'
-                  : ''
-              }`}
-              onClick={() => actions.setActiveTabGroup({ tabGroupId: tg.id })}
-            >
-              <TabBar
-                tabGroup={tg}
-                onSelectTab={(tabId) => actions.selectTab({ tabGroupId: tg.id, tabId })}
-                onSelectPair={(pairId) => actions.selectPair({ tabGroupId: tg.id, pairId })}
-                onCloseTab={(tabId) => actions.closeTab({ tabGroupId: tg.id, tabId })}
-                onAddTab={() => openAddTabModal(tg.id)}
-                onCreatePair={(tabIds) => actions.createPair({ tabGroupId: tg.id, tabIds })}
-                onDragStart={handleDragStart}
-                onDragOver={handleDragOver}
-                onDrop={handleDrop}
-              />
-              <IframePanel
-                tabGroup={tg}
-                onUpdatePairRatios={(pairId, ratios) =>
-                  actions.updatePairRatios({ tabGroupId: tg.id, pairId, ratios })
-                }
-              />
-            </div>
-          ))
-        )}
+        <WorkspaceContentView
+          activeTabGroups={activeTabGroups}
+          activeTabGroupId={workspace.activeTabGroupId}
+          actions={actions}
+          onOpenAddTabModal={openAddTabModal}
+          onDragStart={handleDragStart}
+          onDragOver={handleDragOver}
+          onDrop={handleDrop}
+        />
       </div>
 
       <AddTabModal

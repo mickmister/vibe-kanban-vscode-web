@@ -1,6 +1,6 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import { WorkspaceShell, type WorkspaceActions } from './WorkspaceShell';
-import type { WorkspaceState, Tab, TabPair, TabGroup } from '../types';
+import type { WorkspaceState } from '../types';
 
 interface WorkspaceShellContainerProps {
   initialWorkspace?: WorkspaceState;
@@ -12,16 +12,15 @@ export function WorkspaceShellContainer({ initialWorkspace }: WorkspaceShellCont
   );
 
   const actions: WorkspaceActions = {
-    selectSpace: useCallback(({ spaceId }) => {
+    selectSpace: ({ spaceId }) => {
       setWorkspace((prev) => ({
         ...prev,
         activeSpaceId: spaceId,
-        // Set active tab group to first in the space
         activeTabGroupId: prev.spaces.find((s) => s.id === spaceId)?.tabGroupIds[0] || prev.activeTabGroupId,
       }));
-    }, []),
+    },
 
-    addSpace: useCallback(({ name }) => {
+    addSpace: ({ name }) => {
       setWorkspace((prev) => {
         const newSpaceId = `space_${prev.nextId}`;
         const newTabGroupId = `tg_${prev.nextId + 1}`;
@@ -60,22 +59,18 @@ export function WorkspaceShellContainer({ initialWorkspace }: WorkspaceShellCont
           activeTabGroupId: newTabGroupId,
         };
       });
-    }, []),
+    },
 
-    deleteSpace: useCallback(({ spaceId }) => {
+    deleteSpace: ({ spaceId }) => {
       setWorkspace((prev) => {
         const space = prev.spaces.find((s) => s.id === spaceId);
         if (!space) return prev;
 
-        // Remove tab groups belonging to this space
         const remainingTabGroups = prev.tabGroups.filter(
           (tg) => !space.tabGroupIds.includes(tg.id)
         );
-
-        // Remove the space
         const remainingSpaces = prev.spaces.filter((s) => s.id !== spaceId);
 
-        // If we deleted the active space, switch to first available
         const newActiveSpaceId =
           prev.activeSpaceId === spaceId
             ? remainingSpaces[0]?.id || ''
@@ -94,43 +89,43 @@ export function WorkspaceShellContainer({ initialWorkspace }: WorkspaceShellCont
           activeTabGroupId: newActiveTabGroupId,
         };
       });
-    }, []),
+    },
 
-    renameSpace: useCallback(({ spaceId, name }) => {
+    renameSpace: ({ spaceId, name }) => {
       setWorkspace((prev) => ({
         ...prev,
         spaces: prev.spaces.map((s) =>
           s.id === spaceId ? { ...s, name } : s
         ),
       }));
-    }, []),
+    },
 
-    selectTab: useCallback(({ tabGroupId, tabId }) => {
+    selectTab: ({ tabGroupId, tabId }) => {
       setWorkspace((prev) => ({
         ...prev,
         tabGroups: prev.tabGroups.map((tg) =>
           tg.id === tabGroupId ? { ...tg, activeItemId: tabId } : tg
         ),
       }));
-    }, []),
+    },
 
-    selectPair: useCallback(({ tabGroupId, pairId }) => {
+    selectPair: ({ tabGroupId, pairId }) => {
       setWorkspace((prev) => ({
         ...prev,
         tabGroups: prev.tabGroups.map((tg) =>
           tg.id === tabGroupId ? { ...tg, activeItemId: pairId } : tg
         ),
       }));
-    }, []),
+    },
 
-    setActiveTabGroup: useCallback(({ tabGroupId }) => {
+    setActiveTabGroup: ({ tabGroupId }) => {
       setWorkspace((prev) => ({
         ...prev,
         activeTabGroupId: tabGroupId,
       }));
-    }, []),
+    },
 
-    closeTab: useCallback(({ tabGroupId, tabId }) => {
+    closeTab: ({ tabGroupId, tabId }) => {
       setWorkspace((prev) => {
         const tabGroup = prev.tabGroups.find((tg) => tg.id === tabGroupId);
         if (!tabGroup) return prev;
@@ -141,15 +136,11 @@ export function WorkspaceShellContainer({ initialWorkspace }: WorkspaceShellCont
           return prev;
         }
 
-        // Remove tab
         const newTabs = tabGroup.tabs.filter((t) => t.id !== tabId);
-
-        // Remove pairs containing this tab
         const newPairs = tabGroup.pairs.filter(
           (p) => !p.tabIds.includes(tabId)
         );
 
-        // If we closed the active tab, switch to first available
         let newActiveItemId = tabGroup.activeItemId;
         if (tabGroup.activeItemId === tabId) {
           newActiveItemId = newTabs[0]?.id || newPairs[0]?.id || '';
@@ -164,9 +155,9 @@ export function WorkspaceShellContainer({ initialWorkspace }: WorkspaceShellCont
           ),
         };
       });
-    }, []),
+    },
 
-    addTab: useCallback(({ tabGroupId, title, url }) => {
+    addTab: ({ tabGroupId, title, url }) => {
       setWorkspace((prev) => {
         const newTabId = `tab_${prev.nextId}`;
         return {
@@ -183,9 +174,9 @@ export function WorkspaceShellContainer({ initialWorkspace }: WorkspaceShellCont
           ),
         };
       });
-    }, []),
+    },
 
-    createPair: useCallback(({ tabGroupId, tabIds }) => {
+    createPair: ({ tabGroupId, tabIds }) => {
       setWorkspace((prev) => {
         const newPairId = `pair_${prev.nextId}`;
         return {
@@ -205,9 +196,9 @@ export function WorkspaceShellContainer({ initialWorkspace }: WorkspaceShellCont
           ),
         };
       });
-    }, []),
+    },
 
-    updatePairRatios: useCallback(({ tabGroupId, pairId, ratios }) => {
+    updatePairRatios: ({ tabGroupId, pairId, ratios }) => {
       setWorkspace((prev) => ({
         ...prev,
         tabGroups: prev.tabGroups.map((tg) =>
@@ -221,9 +212,9 @@ export function WorkspaceShellContainer({ initialWorkspace }: WorkspaceShellCont
             : tg
         ),
       }));
-    }, []),
+    },
 
-    reorderTabGroups: useCallback(({ sourceId, targetId }) => {
+    reorderTabGroups: ({ sourceId, targetId }) => {
       setWorkspace((prev) => {
         const activeSpace = prev.spaces.find((s) => s.id === prev.activeSpaceId);
         if (!activeSpace) return prev;
@@ -234,7 +225,6 @@ export function WorkspaceShellContainer({ initialWorkspace }: WorkspaceShellCont
 
         if (sourceIdx === -1 || targetIdx === -1) return prev;
 
-        // Reorder
         tabGroupIds.splice(sourceIdx, 1);
         tabGroupIds.splice(targetIdx, 0, sourceId);
 
@@ -245,9 +235,9 @@ export function WorkspaceShellContainer({ initialWorkspace }: WorkspaceShellCont
           ),
         };
       });
-    }, []),
+    },
 
-    closeActiveTab: useCallback(() => {
+    closeActiveTab: () => {
       setWorkspace((prev) => {
         const activeTabGroup = prev.tabGroups.find(
           (tg) => tg.id === prev.activeTabGroupId
@@ -264,15 +254,10 @@ export function WorkspaceShellContainer({ initialWorkspace }: WorkspaceShellCont
             return prev;
           }
 
-          // Remove tab
           const newTabs = activeTabGroup.tabs.filter((t) => t.id !== activeItem);
-
-          // Remove pairs containing this tab
           const newPairs = activeTabGroup.pairs.filter(
             (p) => !p.tabIds.includes(activeItem)
           );
-
-          // Switch to first available
           const newActiveItemId = newTabs[0]?.id || newPairs[0]?.id || '';
 
           return {
@@ -288,10 +273,7 @@ export function WorkspaceShellContainer({ initialWorkspace }: WorkspaceShellCont
         // Check if it's a pair
         const pair = activeTabGroup.pairs.find((p) => p.id === activeItem);
         if (pair) {
-          // Remove the pair
           const newPairs = activeTabGroup.pairs.filter((p) => p.id !== activeItem);
-
-          // Switch to first available
           const newActiveItemId =
             activeTabGroup.tabs[0]?.id || newPairs[0]?.id || '';
 
@@ -307,7 +289,7 @@ export function WorkspaceShellContainer({ initialWorkspace }: WorkspaceShellCont
 
         return prev;
       });
-    }, []),
+    },
   };
 
   return <WorkspaceShell workspace={workspace} actions={actions} />;
