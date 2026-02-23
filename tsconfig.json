@@ -3,6 +3,8 @@
   "compilerOptions": {
     "verbatimModuleSyntax": false,
     "esModuleInterop": true,
+    "moduleResolution": "bundler",
+    "module": "es2020",
 
     // File Layout
     // "rootDir": "./src",
@@ -10,7 +12,6 @@
 
     // Environment Settings
     // See also https://aka.ms/tsconfig/module
-    "module": "commonjs",
     "target": "esnext",
     "types": [],
     // For nodejs:

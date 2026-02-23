@@ -303,7 +303,6 @@ function createDefaultWorkspace(): WorkspaceState {
       {
         id: 'tg_1',
         label: 'Editor',
-        activeItemId: '',
         tabs: [],
         pairs: [],
         order: 0,
