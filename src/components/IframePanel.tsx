@@ -175,7 +175,7 @@ function SingleTabView({
   const isLoaded = loadingState.get(activeTab.id) ?? false;
 
   return (
-    <div className="flex-1 min-h-0 relative">
+    <div className="flex-1 min-h-0 relative [&>div]:h-full">
       {portalNode && <OutPortal node={portalNode} />}
       {!isLoaded && <LoadingOverlay />}
     </div>
@@ -223,7 +223,7 @@ function PairView({
         return (
           <React.Fragment key={tab.id}>
             <Panel id={tab.id} defaultSize={percentages[i]} minSize={10}>
-              <div className="relative w-full h-full">
+              <div className="relative w-full h-full [&>div]:h-full">
                 <OutPortal node={portalNode} />
                 {!isLoaded && <LoadingOverlay />}
               </div>
