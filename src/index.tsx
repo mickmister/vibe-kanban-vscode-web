@@ -25,12 +25,15 @@ springboard.registerModule('workspace', {rpcMode: 'remote'}, async (moduleAPI) =
 
   const actions = moduleAPI.createActions({
     addSpace: async (args: { name: string }) => {
-      return workspaceState.setStateImmer((draft) => {
-        const id = `space_${draft.nextId++}`;
-        const tgId = `tg_${draft.nextId++}`;
+      let spaceId: string | undefined;
+      let tabGroupId: string | undefined;
+
+      workspaceState.setStateImmer((draft) => {
+        spaceId = `space_${draft.nextId++}`;
+        tabGroupId = `tg_${draft.nextId++}`;
 
         draft.tabGroups.push({
-          id: tgId,
+          id: tabGroupId,
           label: 'Main',
           tabs: [],
           pairs: [],
@@ -38,29 +41,35 @@ springboard.registerModule('workspace', {rpcMode: 'remote'}, async (moduleAPI) =
         });
 
         draft.spaces.push({
-          id,
+          id: spaceId,
           name: args.name,
           icon: 'default',
-          tabGroupIds: [tgId],
+          tabGroupIds: [tabGroupId],
         });
 
-        return { spaceId: id, tabGroupId: tgId };
       });
+
+      if (!(spaceId && tabGroupId)) {
+        return undefined;
+      }
+      
+      return { spaceId, tabGroupId };
     },
 
     deleteSpace: async (args: { spaceId: string }) => {
-      return workspaceState.setStateImmer((draft) => {
+      workspaceState.setStateImmer((draft) => {
         const idx = draft.spaces.findIndex((s) => s.id === args.spaceId);
         if (idx === -1 || draft.spaces.length <= 1) return { wasDeleted: false };
 
         const space = draft.spaces[idx];
         draft.tabGroups = draft.tabGroups.filter(
-          (tg) => !space.tabGroupIds.includes(tg.id)
+          (tg) => !space!.tabGroupIds.includes(tg.id)
         );
         draft.spaces.splice(idx, 1);
 
-        return { wasDeleted: true, deletedSpaceId: args.spaceId };
       });
+      
+      return { wasDeleted: true, deletedSpaceId: args.spaceId };
     },
 
     renameSpace: async (args: { spaceId: string; name: string }) => {
@@ -85,26 +94,32 @@ springboard.registerModule('workspace', {rpcMode: 'remote'}, async (moduleAPI) =
     },
 
     addTab: async (args: { tabGroupId: string; title: string; url: string }) => {
-      return workspaceState.setStateImmer((draft) => {
+      let tabId = '';
+
+      workspaceState.setStateImmer((draft) => {
         const tg = draft.tabGroups.find((g) => g.id === args.tabGroupId);
         if (!tg) return;
 
-        const tabId = `tab_${draft.nextId++}`;
+        tabId = `tab_${draft.nextId++}`;
         tg.tabs.push({ id: tabId, title: args.title, url: args.url });
-        return { tabId, tabGroupId: args.tabGroupId };
       });
+      
+      return { tabId, tabGroupId: args.tabGroupId };
     },
 
     createPair: async (args: { tabGroupId: string; tabIds: string[] }) => {
-      return workspaceState.setStateImmer((draft) => {
+      let pairId = '';
+
+      workspaceState.setStateImmer((draft) => {
         const tg = draft.tabGroups.find((g) => g.id === args.tabGroupId);
         if (!tg) return;
 
-        const pairId = `pair_${draft.nextId++}`;
+        pairId = `pair_${draft.nextId++}`;
         const ratios = args.tabIds.map(() => 100 / args.tabIds.length);
         tg.pairs.push({ id: pairId, tabIds: args.tabIds, ratios });
-        return { pairId, tabGroupId: args.tabGroupId };
       });
+      
+      return { pairId, tabGroupId: args.tabGroupId };
     },
 
     updatePairRatios: async (args: { tabGroupId: string; pairId: string; ratios: number[] }) => {
@@ -122,15 +137,18 @@ springboard.registerModule('workspace', {rpcMode: 'remote'}, async (moduleAPI) =
       containerRef: string;
       activeSpaceId: string;
     }) => {
-      return workspaceState.setStateImmer((draft) => {
+      let tabGroupId: string | undefined;
+      let pairId: string | undefined;
+
+      workspaceState.setStateImmer((draft) => {
         const space = draft.spaces.find((s) => s.id === args.activeSpaceId);
         if (!space) return;
 
         // Generate IDs for tab group and tabs
-        const tabGroupId = `tg_${draft.nextId++}`;
+        tabGroupId = `tg_${draft.nextId++}`;
+        pairId = `pair_${draft.nextId++}`;
         const kanbanTabId = `tab_${draft.nextId++}`;
         const codeTabId = `tab_${draft.nextId++}`;
-        const pairId = `pair_${draft.nextId++}`;
 
         // Create the new tab group
         draft.tabGroups.push({
@@ -160,9 +178,13 @@ springboard.registerModule('workspace', {rpcMode: 'remote'}, async (moduleAPI) =
 
         // Add tab group to the space
         space.tabGroupIds.push(tabGroupId);
-
-        return { tabGroupId, pairId };
       });
+      
+      if (!(tabGroupId && pairId)) {
+        return undefined;
+      }
+      
+      return { tabGroupId, pairId };
     },
 
     updateTabUrl: async (args: { tabGroupId: string; tabId: string; newUrl: string }) => {
@@ -278,7 +300,7 @@ springboard.registerModule('workspace', {rpcMode: 'remote'}, async (moduleAPI) =
           <WorkspaceShell
             workspace={workspace}
             session={sessionNav}
-            actions={wrappedActions}
+            actions={normalizeActionReturns(wrappedActions)}
             sessionActions={sessionActions}
           />
         </div>
@@ -297,3 +319,13 @@ springboard.registerModule('workspace', {rpcMode: 'remote'}, async (moduleAPI) =
     },
   };
 });
+
+type FlattenNestedPromise<T> = T extends Promise<unknown> ? Promise<Awaited<T>> : T;
+
+type NormalizeActionReturns<T extends Record<string, (...args: any[]) => any>> = {
+  [K in keyof T]: (...args: Parameters<T[K]>) => FlattenNestedPromise<ReturnType<T[K]>>;
+};
+
+function normalizeActionReturns<T extends Record<string, (...args: any[]) => any>>(actions: T) {
+  return actions as NormalizeActionReturns<T>;
+}
