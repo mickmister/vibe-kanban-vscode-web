@@ -16,13 +16,12 @@ type IframeEntry = {
   iframe: HTMLIFrameElement;
   container: HTMLDivElement;
   loaded: boolean;
+  listeners: Set<() => void>;
 };
 
 let iframeStore: Map<string, IframeEntry> = new Map();
 
 // Preserve iframe store across HMR updates using Vite's HMR API.
-// We use indirect eval to avoid TS1343 since tsconfig uses module: commonjs.
-// Vite transforms this at build time; tsc never executes it.
 try {
   // @ts-expect-error -- import.meta.hot is Vite-specific, not available under module: commonjs
   const hot = import.meta.hot;
@@ -35,10 +34,10 @@ try {
     });
   }
 } catch {
-  // Not in Vite dev mode (e.g., production build)
+  // Not in Vite dev mode
 }
 
-function getOrCreateIframe(tab: Tab, onLoad: (tabId: string) => void): IframeEntry {
+function getOrCreateIframe(tab: Tab): IframeEntry {
   const existing = iframeStore.get(tab.id);
   if (existing) return existing;
 
@@ -56,11 +55,11 @@ function getOrCreateIframe(tab: Tab, onLoad: (tabId: string) => void): IframeEnt
   iframe.setAttribute('allow', 'clipboard-read; clipboard-write; fullscreen');
   iframe.setAttribute('role', 'region');
 
-  const entry: IframeEntry = { iframe, container, loaded: false };
+  const entry: IframeEntry = { iframe, container, loaded: false, listeners: new Set() };
 
   iframe.addEventListener('load', () => {
     entry.loaded = true;
-    onLoad(tab.id);
+    entry.listeners.forEach((fn) => fn());
   });
 
   container.appendChild(iframe);
@@ -73,18 +72,22 @@ function removeIframe(tabId: string) {
   const entry = iframeStore.get(tabId);
   if (entry) {
     entry.container.remove();
+    entry.listeners.clear();
     iframeStore.delete(tabId);
   }
 }
 
 /**
- * Hook that imperatively manages iframe DOM elements.
- * Iframes are created via direct DOM manipulation and stored
- * in a module-level Map, making them immune to React re-renders and HMR.
+ * Ensure all iframes exist for the given tabs (eagerly, not in an effect).
+ * Clean up stale entries in an effect.
  */
 function useImperativeIframes(tabs: Tab[]) {
+  // Eagerly create iframes so they're available for IframeHost immediately
+  for (const tab of tabs) {
+    getOrCreateIframe(tab);
+  }
+
   const [loadingState, setLoadingState] = useState<Map<string, boolean>>(() => {
-    // Initialize from existing store (survives HMR)
     const initial = new Map<string, boolean>();
     for (const tab of tabs) {
       const entry = iframeStore.get(tab.id);
@@ -93,41 +96,51 @@ function useImperativeIframes(tabs: Tab[]) {
     return initial;
   });
 
-  const handleLoad = useCallback((tabId: string) => {
-    setLoadingState((prev) => {
-      const next = new Map(prev);
-      next.set(tabId, true);
-      return next;
-    });
-  }, []);
+  // Subscribe to load events
+  useEffect(() => {
+    const unsubs: (() => void)[] = [];
 
+    for (const tab of tabs) {
+      const entry = iframeStore.get(tab.id);
+      if (!entry) continue;
+
+      // If already loaded, update state immediately
+      if (entry.loaded) {
+        setLoadingState((prev) => {
+          if (prev.get(tab.id) === true) return prev;
+          const next = new Map(prev);
+          next.set(tab.id, true);
+          return next;
+        });
+        continue;
+      }
+
+      // Otherwise subscribe to load
+      const listener = () => {
+        setLoadingState((prev) => {
+          const next = new Map(prev);
+          next.set(tab.id, true);
+          return next;
+        });
+      };
+      entry.listeners.add(listener);
+      unsubs.push(() => entry.listeners.delete(listener));
+    }
+
+    return () => unsubs.forEach((fn) => fn());
+  }, [tabs]);
+
+  // Clean up stale iframes
   useEffect(() => {
     const currentTabIds = new Set(tabs.map((t) => t.id));
-
-    // Remove iframes for tabs that no longer exist
     for (const [id] of iframeStore.entries()) {
       if (!currentTabIds.has(id)) {
         removeIframe(id);
       }
     }
+  }, [tabs]);
 
-    // Ensure iframes exist for all current tabs
-    for (const tab of tabs) {
-      getOrCreateIframe(tab, handleLoad);
-    }
-
-    // Sync loading state
-    setLoadingState((prev) => {
-      const next = new Map<string, boolean>();
-      for (const tab of tabs) {
-        const entry = iframeStore.get(tab.id);
-        next.set(tab.id, entry?.loaded ?? prev.get(tab.id) ?? false);
-      }
-      return next;
-    });
-  }, [tabs, handleLoad]);
-
-  return { loadingState, handleLoad };
+  return { loadingState };
 }
 
 /**
@@ -143,19 +156,15 @@ function IframeHost({ tabId, visible }: { tabId: string; visible: boolean }) {
     const entry = iframeStore.get(tabId);
     if (!host || !entry) return;
 
-    // Append the iframe's container to this host element
     host.appendChild(entry.container);
 
     return () => {
-      // On cleanup, move the container to a hidden offscreen holder
-      // so it's not destroyed when React unmounts this component
       if (entry.container.parentElement === host) {
         host.removeChild(entry.container);
       }
     };
   }, [tabId]);
 
-  // Control visibility without unmounting
   return (
     <div
       ref={hostRef}
@@ -175,7 +184,6 @@ export function IframePanel({ tabGroup, onUpdatePairRatios }: IframePanelProps) 
     (p) => p.id === tabGroup.activeItemId
   );
 
-  // Get IDs of currently visible tabs
   const visibleTabIds = new Set<string>();
   if (activePair) {
     activePair.tabIds.forEach((id) => visibleTabIds.add(id));
@@ -185,13 +193,11 @@ export function IframePanel({ tabGroup, onUpdatePairRatios }: IframePanelProps) 
 
   return (
     <>
-      {/* Hidden hosts for non-visible iframes — keeps them alive in the DOM */}
       {tabGroup.tabs.map((tab) => {
         if (visibleTabIds.has(tab.id)) return null;
         return <IframeHost key={tab.id} tabId={tab.id} visible={false} />;
       })}
 
-      {/* Visible tab(s) */}
       {activePair ? (
         <PairView
           activePair={activePair}
