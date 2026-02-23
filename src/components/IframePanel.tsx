@@ -4,6 +4,7 @@ import type { TabGroup, Tab } from '../types';
 
 interface IframePanelProps {
   tabGroup: TabGroup;
+  activeItemId: string;
   onUpdatePairRatios: (pairId: string, ratios: number[]) => void;
 }
 

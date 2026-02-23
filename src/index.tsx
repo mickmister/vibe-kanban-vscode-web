@@ -201,6 +201,7 @@ springboard.registerModule('workspace', {rpcMode: 'remote'}, async (moduleAPI) =
       selectTab: sessionNav.selectTab,
       selectPair: sessionNav.selectPair,
       setActiveTabGroup: sessionNav.setActiveTabGroup,
+      getActiveItem: sessionNav.getActiveItem,
     };
 
     return (

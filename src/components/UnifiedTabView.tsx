@@ -49,6 +49,7 @@ export function UnifiedTabView({
     tabGroups.forEach((group) => {
       const tabCount = group.tabs.length;
       const pairCount = group.pairs.length;
+      const activeItemId = sessionActions.getActiveItem(group.id);
 
       // Add group label as a special "tab" with count badge
       result.push({
@@ -67,7 +68,7 @@ export function UnifiedTabView({
         result.push({
           id: tab.id,
           title: tab.title,
-          active: group.activeItemId === tab.id && group.id === activeTabGroupId,
+          active: activeItemId === tab.id && group.id === activeTabGroupId,
           favicon: false,
           isCloseIconVisible: !tab.pinned,
         });
@@ -83,7 +84,7 @@ export function UnifiedTabView({
         result.push({
           id: pair.id,
           title: `⊞ ${tabNames}`,
-          active: group.activeItemId === pair.id && group.id === activeTabGroupId,
+          active: activeItemId === pair.id && group.id === activeTabGroupId,
           favicon: false,
           isCloseIconVisible: true,
           isPair: true,
@@ -93,7 +94,7 @@ export function UnifiedTabView({
     });
 
     return result;
-  }, [tabGroups, activeTabGroupId]);
+  }, [tabGroups, activeTabGroupId, sessionActions]);
 
   const handleTabActive = (tabId: string) => {
     // Check if it's a group label
@@ -209,6 +210,7 @@ export function UnifiedTabView({
         {activeTabGroup ? (
           <IframePanel
             tabGroup={activeTabGroup}
+            activeItemId={sessionActions.getActiveItem(activeTabGroup.id)}
             onUpdatePairRatios={(pairId, ratios) =>
               actions.updatePairRatios({
                 tabGroupId: activeTabGroup.id,

@@ -22,6 +22,7 @@ export type SessionActions = {
   selectTab: (tabGroupId: string, tabId: string) => void;
   selectPair: (tabGroupId: string, pairId: string) => void;
   setActiveTabGroup: (tabGroupId: string) => void;
+  getActiveItem: (tabGroupId: string) => string;
 };
 
 interface WorkspaceShellProps {
