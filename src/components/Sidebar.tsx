@@ -4,6 +4,7 @@ import type { WorkspaceState, Space } from '../types';
 
 interface SidebarProps {
   workspace: WorkspaceState;
+  activeSpaceId: string;
   onSelectSpace: (spaceId: string) => void;
   onAddSpace: (name: string) => void;
   onDeleteSpace: (spaceId: string) => void;
@@ -19,6 +20,7 @@ const SPACE_ICONS: Record<string, string> = {
 
 export function Sidebar({
   workspace,
+  activeSpaceId,
   onSelectSpace,
   onAddSpace,
   onDeleteSpace,
@@ -80,7 +82,7 @@ export function Sidebar({
             <div
               key={space.id}
               className={`group flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer transition-colors ${
-                workspace.activeSpaceId === space.id
+                activeSpaceId === space.id
                   ? 'bg-primary-500/20 text-primary-400'
                   : 'text-neutral-300 hover:bg-neutral-800'
               }`}

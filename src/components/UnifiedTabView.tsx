@@ -4,12 +4,13 @@ import type { TabProperties } from '../../react-chrome-tabs/src/chrome-tabs';
 import { AddressBar } from './AddressBar';
 import { IframePanel } from './IframePanel';
 import type { TabGroup } from '../types';
-import type { WorkspaceActions } from './WorkspaceShell';
+import type { WorkspaceActions, SessionActions } from './WorkspaceShell';
 
 interface UnifiedTabViewProps {
   tabGroups: TabGroup[];
   activeTabGroupId: string;
   actions: WorkspaceActions;
+  sessionActions: SessionActions;
   onOpenAddTabModal: (tabGroupId: string) => void;
 }
 
@@ -25,6 +26,7 @@ export function UnifiedTabView({
   tabGroups,
   activeTabGroupId,
   actions,
+  sessionActions,
   onOpenAddTabModal,
 }: UnifiedTabViewProps) {
   const [isPinned, setIsPinned] = useState(false);
@@ -97,7 +99,7 @@ export function UnifiedTabView({
     // Check if it's a group label
     if (tabId.startsWith('group-label-')) {
       const groupId = tabId.replace('group-label-', '');
-      actions.setActiveTabGroup({ tabGroupId: groupId });
+      sessionActions.setActiveTabGroup(groupId);
       return;
     }
 
@@ -105,13 +107,13 @@ export function UnifiedTabView({
     for (const group of tabGroups) {
       // Check if it's a regular tab
       if (group.tabs.some((t) => t.id === tabId)) {
-        actions.selectTab({ tabGroupId: group.id, tabId });
+        sessionActions.selectTab(group.id, tabId);
         return;
       }
 
       // Check if it's a pair
       if (group.pairs.some((p) => p.id === tabId)) {
-        actions.selectPair({ tabGroupId: group.id, pairId: tabId });
+        sessionActions.selectPair(group.id, tabId);
         return;
       }
     }

@@ -138,8 +138,6 @@ const multiSpaceWorkspace: WorkspaceState = {
       order: 0,
     },
   ],
-  activeSpaceId: 'space_1',
-  activeTabGroupId: 'tg_1',
   nextId: 20,
 };
 
@@ -194,8 +192,6 @@ const splitViewWorkspace: WorkspaceState = {
       order: 0,
     },
   ],
-  activeSpaceId: 'space_1',
-  activeTabGroupId: 'tg_1',
   nextId: 10,
 };
 
@@ -214,8 +210,6 @@ const emptySpaceWorkspace: WorkspaceState = {
     },
   ],
   tabGroups: [],
-  activeSpaceId: 'space_1',
-  activeTabGroupId: '',
   nextId: 5,
 };
 
@@ -267,8 +261,6 @@ const manyTabGroupsWorkspace: WorkspaceState = {
       order: 3,
     },
   ],
-  activeSpaceId: 'space_1',
-  activeTabGroupId: 'tg_1',
   nextId: 10,
 };
 

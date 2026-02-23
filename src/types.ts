@@ -17,8 +17,6 @@ export interface TabPair {
 export interface TabGroup {
   id: string;
   label: string;
-  /** Active tab or pair ID being displayed */
-  activeItemId: string;
   /** All tabs in this group */
   tabs: Tab[];
   /** Tab pairs (split views) */
@@ -38,9 +36,6 @@ export interface Space {
 export interface WorkspaceState {
   spaces: Space[];
   tabGroups: TabGroup[];
-  activeSpaceId: string;
-  /** Active tab group within the current space */
-  activeTabGroupId: string;
   /** Counter for generating unique IDs */
   nextId: number;
 }
@@ -63,14 +58,11 @@ export function createDefaultWorkspace(): WorkspaceState {
       {
         id: 'tg_1',
         label: 'Editor',
-        activeItemId: '',
         tabs: [],
         pairs: [],
         order: 0,
       },
     ],
-    activeSpaceId: 'space_1',
-    activeTabGroupId: 'tg_1',
     nextId: 10,
   };
 }

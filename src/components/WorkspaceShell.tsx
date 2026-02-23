@@ -3,29 +3,35 @@ import { Sidebar } from './Sidebar';
 import { WorkspaceContentView } from './WorkspaceContentView';
 import { AddTabModal } from './AddTabModal';
 import type { WorkspaceState, TabGroup } from '../types';
+import type { SessionWorkspaceNav } from '../sessionState';
 
 export type WorkspaceActions = {
-  selectSpace: (args: { spaceId: string }) => void;
-  addSpace: (args: { name: string }) => void;
-  deleteSpace: (args: { spaceId: string }) => void;
+  addSpace: (args: { name: string }) => Promise<{ spaceId: string; tabGroupId: string } | undefined>;
+  deleteSpace: (args: { spaceId: string }) => Promise<{ wasDeleted: boolean; deletedSpaceId?: string } | undefined>;
   renameSpace: (args: { spaceId: string; name: string }) => void;
-  selectTab: (args: { tabGroupId: string; tabId: string }) => void;
-  selectPair: (args: { tabGroupId: string; pairId: string }) => void;
-  setActiveTabGroup: (args: { tabGroupId: string }) => void;
   closeTab: (args: { tabGroupId: string; tabId: string }) => void;
   addTab: (args: { tabGroupId: string; title: string; url: string }) => void;
   createPair: (args: { tabGroupId: string; tabIds: string[] }) => void;
   updatePairRatios: (args: { tabGroupId: string; pairId: string; ratios: number[] }) => void;
   reorderTabGroups: (args: { sourceId: string; targetId: string }) => void;
-  closeActiveTab: (args: Record<string, never>) => void;
+  closeActiveTab: () => void;
+};
+
+export type SessionActions = {
+  selectSpace: (spaceId: string) => void;
+  selectTab: (tabGroupId: string, tabId: string) => void;
+  selectPair: (tabGroupId: string, pairId: string) => void;
+  setActiveTabGroup: (tabGroupId: string) => void;
 };
 
 interface WorkspaceShellProps {
   workspace: WorkspaceState;
+  session: SessionWorkspaceNav;
   actions: WorkspaceActions;
+  sessionActions: SessionActions;
 }
 
-export function WorkspaceShell({ workspace, actions }: WorkspaceShellProps) {
+export function WorkspaceShell({ workspace, session, actions, sessionActions }: WorkspaceShellProps) {
   const [addTabModalOpen, setAddTabModalOpen] = useState(false);
   const [addTabTargetGroupId, setAddTabTargetGroupId] = useState<string>('');
   const dragGroupRef = useRef<string | null>(null);
@@ -55,7 +61,7 @@ export function WorkspaceShell({ workspace, actions }: WorkspaceShellProps) {
       if ((e.metaKey || e.ctrlKey) && e.key === 'w') {
         e.preventDefault();
         e.stopPropagation();
-        actions.closeActiveTab({} as Record<string, never>);
+        actions.closeActiveTab();
       }
     };
 
@@ -76,7 +82,7 @@ export function WorkspaceShell({ workspace, actions }: WorkspaceShellProps) {
 
   // --- Derived state ---
   const activeSpace = workspace.spaces.find(
-    (s) => s.id === workspace.activeSpaceId
+    (s) => s.id === session.activeSpaceId
   );
   const activeTabGroups = activeSpace
     ? activeSpace.tabGroupIds
@@ -88,8 +94,14 @@ export function WorkspaceShell({ workspace, actions }: WorkspaceShellProps) {
     <div className="w-full h-full flex flex-col bg-neutral-950">
       <Sidebar
         workspace={workspace}
-        onSelectSpace={(spaceId) => actions.selectSpace({ spaceId })}
-        onAddSpace={(name) => actions.addSpace({ name })}
+        activeSpaceId={session.activeSpaceId}
+        onSelectSpace={(spaceId) => sessionActions.selectSpace(spaceId)}
+        onAddSpace={async (name) => {
+          const result = await actions.addSpace({ name });
+          if (result) {
+            sessionActions.selectSpace(result.spaceId);
+          }
+        }}
         onDeleteSpace={(spaceId) => actions.deleteSpace({ spaceId })}
         onRenameSpace={(spaceId, name) => actions.renameSpace({ spaceId, name })}
       />
@@ -98,8 +110,9 @@ export function WorkspaceShell({ workspace, actions }: WorkspaceShellProps) {
       <div className="flex-1 flex flex-col min-h-0">
         <WorkspaceContentView
           activeTabGroups={activeTabGroups}
-          activeTabGroupId={workspace.activeTabGroupId}
+          activeTabGroupId={session.activeTabGroupId}
           actions={actions}
+          sessionActions={sessionActions}
           onOpenAddTabModal={openAddTabModal}
           onDragStart={handleDragStart}
           onDragOver={handleDragOver}

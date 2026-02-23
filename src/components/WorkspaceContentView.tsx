@@ -1,12 +1,13 @@
 import React from 'react';
 import { UnifiedTabView } from './UnifiedTabView';
 import type { TabGroup } from '../types';
-import type { WorkspaceActions } from './WorkspaceShell';
+import type { WorkspaceActions, SessionActions } from './WorkspaceShell';
 
 interface WorkspaceContentViewProps {
   activeTabGroups: TabGroup[];
   activeTabGroupId: string;
   actions: WorkspaceActions;
+  sessionActions: SessionActions;
   onOpenAddTabModal: (tabGroupId: string) => void;
   onDragStart: (e: React.DragEvent, tabGroupId: string) => void;
   onDragOver: (e: React.DragEvent) => void;
@@ -17,6 +18,7 @@ export function WorkspaceContentView({
   activeTabGroups,
   activeTabGroupId,
   actions,
+  sessionActions,
   onOpenAddTabModal,
   onDragStart,
   onDragOver,
@@ -37,6 +39,7 @@ export function WorkspaceContentView({
       tabGroups={activeTabGroups}
       activeTabGroupId={activeTabGroupId}
       actions={actions}
+      sessionActions={sessionActions}
       onOpenAddTabModal={onOpenAddTabModal}
     />
   );
