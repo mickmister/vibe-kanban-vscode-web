@@ -100,7 +100,7 @@ export function AddVKWorkspaceModal({
     if (!selected) return;
 
     const containerRef =
-      selected.container_ref || `/var/tmp/vibe-kanban/worktrees/${selected.branch}`;
+      selected.container_ref || `/var/tmp/vibe-kanban/worktrees/${selected.branch.slice(3)}`;
 
     onAdd(selected.id, selected.name || 'Untitled Workspace', containerRef);
     onClose();
