@@ -88,17 +88,20 @@ export function useSessionWorkspaceNav(workspace: WorkspaceState) {
     saveSessionNav(nav);
   }, [nav]);
 
-  // Validate nav whenever workspace changes (e.g., space/tab group deleted)
+  // Validate nav whenever workspace changes (e.g., space/tab group deleted or added)
   useEffect(() => {
     const spaceExists = workspace.spaces.some(s => s.id === nav.activeSpaceId);
     const tabGroupExists = workspace.tabGroups.some(tg => tg.id === nav.activeTabGroupId);
 
-    if (!spaceExists || !tabGroupExists) {
-      // Current selection is invalid, reset to valid defaults
+    // Check if there are new tab groups not in activeItems
+    const hasNewTabGroups = workspace.tabGroups.some(tg => !(tg.id in nav.activeItems));
+
+    if (!spaceExists || !tabGroupExists || hasNewTabGroups) {
+      // Current selection is invalid or workspace has new tab groups, reload
       const newNav = loadSessionNav(workspace);
       setNav(newNav);
     }
-  }, [workspace.spaces, workspace.tabGroups, nav.activeSpaceId, nav.activeTabGroupId]);
+  }, [workspace.spaces, workspace.tabGroups, nav.activeSpaceId, nav.activeTabGroupId, nav.activeItems]);
 
   const selectSpace = (spaceId: string) => {
     const space = workspace.spaces.find(s => s.id === spaceId);
@@ -107,7 +110,7 @@ export function useSessionWorkspaceNav(workspace: WorkspaceState) {
     // When switching spaces, activate the first tab group in that space
     const firstTabGroupId = space.tabGroupIds[0];
     if (firstTabGroupId) {
-      setNav({ activeSpaceId: spaceId, activeTabGroupId: firstTabGroupId });
+      setNav(prev => ({ ...prev, activeSpaceId: spaceId, activeTabGroupId: firstTabGroupId }));
     }
   };
 
