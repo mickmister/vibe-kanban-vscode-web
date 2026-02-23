@@ -96,61 +96,54 @@ export function WorkspaceShellContainer({ initialWorkspace }: WorkspaceShellCont
           (p) => !p.tabIds.includes(tabId)
         );
 
-        let newActiveItemId = tabGroup.activeItemId;
-        if (tabGroup.activeItemId === tabId && newTabs.length > 0) {
-          newActiveItemId = newTabs[0].id;
-        }
-
         return {
           ...prev,
           tabGroups: prev.tabGroups.map((tg) =>
             tg.id === tabGroupId
-              ? { ...tg, tabs: newTabs, pairs: newPairs, activeItemId: newActiveItemId }
+              ? { ...tg, tabs: newTabs, pairs: newPairs }
               : tg
           ),
         };
       });
     },
 
-    addTab: ({ tabGroupId, title, url }) => {
-      setWorkspace((prev) => {
-        const newTabId = `tab_${prev.nextId}`;
-        return {
-          ...prev,
-          nextId: prev.nextId + 1,
-          tabGroups: prev.tabGroups.map((tg) =>
-            tg.id === tabGroupId
-              ? {
-                  ...tg,
-                  tabs: [...tg.tabs, { id: newTabId, title, url }],
-                  activeItemId: newTabId,
-                }
-              : tg
-          ),
-        };
-      });
+    addTab: async ({ tabGroupId, title, url }) => {
+      const newTabId = `tab_${workspace.nextId}`;
+      setWorkspace((prev) => ({
+        ...prev,
+        nextId: prev.nextId + 1,
+        tabGroups: prev.tabGroups.map((tg) =>
+          tg.id === tabGroupId
+            ? {
+                ...tg,
+                tabs: [...tg.tabs, { id: newTabId, title, url }],
+              }
+            : tg
+        ),
+      }));
+      // Auto-select the new tab via session actions
+      sessionActions.selectTab(tabGroupId, newTabId);
     },
 
-    createPair: ({ tabGroupId, tabIds }) => {
-      setWorkspace((prev) => {
-        const newPairId = `pair_${prev.nextId}`;
-        return {
-          ...prev,
-          nextId: prev.nextId + 1,
-          tabGroups: prev.tabGroups.map((tg) =>
-            tg.id === tabGroupId
-              ? {
-                  ...tg,
-                  pairs: [
-                    ...tg.pairs,
-                    { id: newPairId, tabIds, ratios: tabIds.map(() => 100 / tabIds.length) },
-                  ],
-                  activeItemId: newPairId,
-                }
-              : tg
-          ),
-        };
-      });
+    createPair: async ({ tabGroupId, tabIds }) => {
+      const newPairId = `pair_${workspace.nextId}`;
+      setWorkspace((prev) => ({
+        ...prev,
+        nextId: prev.nextId + 1,
+        tabGroups: prev.tabGroups.map((tg) =>
+          tg.id === tabGroupId
+            ? {
+                ...tg,
+                pairs: [
+                  ...tg.pairs,
+                  { id: newPairId, tabIds, ratios: tabIds.map(() => 100 / tabIds.length) },
+                ],
+              }
+            : tg
+        ),
+      }));
+      // Auto-select the new pair via session actions
+      sessionActions.selectPair(tabGroupId, newPairId);
     },
 
     updatePairRatios: ({ tabGroupId, pairId, ratios }) => {
@@ -198,43 +191,42 @@ export function WorkspaceShellContainer({ initialWorkspace }: WorkspaceShellCont
       );
       if (!activeTabGroup) return;
 
-      const activeItem = activeTabGroup.activeItemId;
+      const activeItem = sessionActions.getActiveItem(session.activeTabGroupId);
 
       // Check if it's a pair - if so, just select first tab
       const pair = activeTabGroup.pairs.find((p) => p.id === activeItem);
-      if (pair) {
-        setWorkspace((prev) => ({
-          ...prev,
-          tabGroups: prev.tabGroups.map((tg) =>
-            tg.id === session.activeTabGroupId && tg.tabs.length > 0
-              ? { ...tg, activeItemId: tg.tabs[0].id }
-              : tg
-          ),
-        }));
+      if (pair && activeTabGroup.tabs.length > 0) {
+        sessionActions.selectTab(session.activeTabGroupId, activeTabGroup.tabs[0].id);
         return;
       }
 
       // Otherwise close active tab (if not pinned)
       const tab = activeTabGroup.tabs.find((t) => t.id === activeItem);
       if (tab && !tab.pinned) {
+        const tabIdx = activeTabGroup.tabs.findIndex((t) => t.id === activeItem);
+        const nextTabId = activeTabGroup.tabs[Math.max(0, tabIdx - 1)]?.id;
+
         setWorkspace((prev) => {
           const tabGroup = prev.tabGroups.find((tg) => tg.id === session.activeTabGroupId);
           if (!tabGroup) return prev;
 
           const newTabs = tabGroup.tabs.filter((t) => t.id !== activeItem);
           const newPairs = tabGroup.pairs.filter((p) => !p.tabIds.includes(activeItem));
-          const tabIdx = tabGroup.tabs.findIndex((t) => t.id === activeItem);
-          const newActiveItemId = newTabs[Math.max(0, tabIdx - 1)]?.id || '';
 
           return {
             ...prev,
             tabGroups: prev.tabGroups.map((tg) =>
               tg.id === session.activeTabGroupId
-                ? { ...tg, tabs: newTabs, pairs: newPairs, activeItemId: newActiveItemId }
+                ? { ...tg, tabs: newTabs, pairs: newPairs }
                 : tg
             ),
           };
         });
+
+        // Select the next tab if we have one
+        if (nextTabId) {
+          sessionActions.selectTab(session.activeTabGroupId, nextTabId);
+        }
       }
     },
   };

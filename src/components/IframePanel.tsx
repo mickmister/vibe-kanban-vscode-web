@@ -175,14 +175,14 @@ function IframeHost({ tabId, visible }: { tabId: string; visible: boolean }) {
   );
 }
 
-export function IframePanel({ tabGroup, onUpdatePairRatios }: IframePanelProps) {
+export function IframePanel({ tabGroup, activeItemId, onUpdatePairRatios }: IframePanelProps) {
   const { loadingState } = useImperativeIframes(tabGroup.tabs);
 
   const activeTab = tabGroup.tabs.find(
-    (t) => t.id === tabGroup.activeItemId
+    (t) => t.id === activeItemId
   );
   const activePair = tabGroup.pairs.find(
-    (p) => p.id === tabGroup.activeItemId
+    (p) => p.id === activeItemId
   );
 
   const visibleTabIds = new Set<string>();

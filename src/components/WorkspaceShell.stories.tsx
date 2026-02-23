@@ -45,7 +45,7 @@ const multiSpaceWorkspace: WorkspaceState = {
     {
       id: 'tg_1',
       label: 'Editor',
-      activeItemId: 'tab_1',
+      // activeItemId: 'tab_1',
       tabs: [
         {
           id: 'tab_1',
@@ -76,7 +76,7 @@ const multiSpaceWorkspace: WorkspaceState = {
     {
       id: 'tg_2',
       label: 'Terminal',
-      activeItemId: 'tab_4',
+      // activeItemId: 'tab_4',
       tabs: [
         {
           id: 'tab_4',
@@ -90,7 +90,7 @@ const multiSpaceWorkspace: WorkspaceState = {
     {
       id: 'tg_3',
       label: 'Design Tools',
-      activeItemId: 'tab_5',
+      // activeItemId: 'tab_5',
       tabs: [
         {
           id: 'tab_5',
@@ -110,7 +110,7 @@ const multiSpaceWorkspace: WorkspaceState = {
     {
       id: 'tg_4',
       label: 'Documentation',
-      activeItemId: 'pair_2',
+      // activeItemId: 'pair_2',
       tabs: [
         {
           id: 'tab_7',
@@ -159,7 +159,7 @@ const splitViewWorkspace: WorkspaceState = {
     {
       id: 'tg_1',
       label: 'Comparison',
-      activeItemId: 'pair_1',
+      // activeItemId: 'pair_1',
       tabs: [
         {
           id: 'tab_1',
@@ -231,7 +231,7 @@ const manyTabGroupsWorkspace: WorkspaceState = {
     {
       id: 'tg_1',
       label: 'Group 1',
-      activeItemId: 'tab_1',
+      // activeItemId: 'tab_1',
       tabs: [{ id: 'tab_1', title: 'Tab 1', url: 'https://example.com' }],
       pairs: [],
       order: 0,
@@ -239,7 +239,7 @@ const manyTabGroupsWorkspace: WorkspaceState = {
     {
       id: 'tg_2',
       label: 'Group 2',
-      activeItemId: 'tab_2',
+      // activeItemId: 'tab_2',
       tabs: [{ id: 'tab_2', title: 'Tab 2', url: 'https://example.com' }],
       pairs: [],
       order: 1,
@@ -247,7 +247,7 @@ const manyTabGroupsWorkspace: WorkspaceState = {
     {
       id: 'tg_3',
       label: 'Group 3',
-      activeItemId: 'tab_3',
+      // activeItemId: 'tab_3',
       tabs: [{ id: 'tab_3', title: 'Tab 3', url: 'https://example.com' }],
       pairs: [],
       order: 2,
@@ -255,7 +255,7 @@ const manyTabGroupsWorkspace: WorkspaceState = {
     {
       id: 'tg_4',
       label: 'Group 4',
-      activeItemId: 'tab_4',
+      // activeItemId: 'tab_4',
       tabs: [{ id: 'tab_4', title: 'Tab 4', url: 'https://example.com' }],
       pairs: [],
       order: 3,
