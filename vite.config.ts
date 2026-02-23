@@ -1,6 +1,7 @@
 /// <reference types="vitest/config" />
 import { defineConfig } from 'vite';
 import { springboard } from 'springboard/vite-plugin';
+import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -25,7 +26,7 @@ if (platformVariant === 'node') {
   platforms = ['browser'];
 }
 export default defineConfig({
-  plugins: [tailwindcss(), springboard({
+  plugins: [react(), tailwindcss(), springboard({
     entry: './src/index.tsx',
     platforms,
     documentMeta: {

@@ -1,6 +1,5 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { Group, Panel, Separator } from 'react-resizable-panels';
-import { createHtmlPortalNode, InPortal, OutPortal } from 'react-reverse-portal';
 import type { TabGroup, Tab } from '../types';
 
 interface IframePanelProps {
@@ -9,80 +8,165 @@ interface IframePanelProps {
 }
 
 /**
- * Hook to manage iframe portal nodes for tabs
- * Portals persist across re-renders, keeping iframes alive even when hidden
+ * Module-level iframe store that persists across HMR updates.
+ * Iframe DOM elements are managed imperatively so React re-renders
+ * (including HMR fast refresh) never recreate them.
  */
-function useIframePortals(tabs: Tab[]) {
-  const portalsRef = useRef<Map<string, ReturnType<typeof createHtmlPortalNode>>>(new Map());
+type IframeEntry = {
+  iframe: HTMLIFrameElement;
+  container: HTMLDivElement;
+  loaded: boolean;
+};
 
-  useEffect(() => {
-    const currentPortals = portalsRef.current;
-    const currentTabIds = new Set(tabs.map((tab) => tab.id));
+let iframeStore: Map<string, IframeEntry> = new Map();
 
-    // Remove portals for tabs that no longer exist
-    for (const [id] of currentPortals.entries()) {
-      if (!currentTabIds.has(id)) {
-        currentPortals.delete(id);
-      }
+// Preserve iframe store across HMR updates using Vite's HMR API.
+// We use indirect eval to avoid TS1343 since tsconfig uses module: commonjs.
+// Vite transforms this at build time; tsc never executes it.
+try {
+  // @ts-expect-error -- import.meta.hot is Vite-specific, not available under module: commonjs
+  const hot = import.meta.hot;
+  if (hot) {
+    if (hot.data.iframeStore) {
+      iframeStore = hot.data.iframeStore;
     }
+    hot.dispose((data: Record<string, unknown>) => {
+      data.iframeStore = iframeStore;
+    });
+  }
+} catch {
+  // Not in Vite dev mode (e.g., production build)
+}
 
-    // Create new portals for new tabs
-    for (const tab of tabs) {
-      if (!currentPortals.has(tab.id)) {
-        currentPortals.set(tab.id, createHtmlPortalNode());
-      }
-    }
-  }, [tabs]);
+function getOrCreateIframe(tab: Tab, onLoad: (tabId: string) => void): IframeEntry {
+  const existing = iframeStore.get(tab.id);
+  if (existing) return existing;
 
-  return portalsRef.current;
+  const container = document.createElement('div');
+  container.style.width = '100%';
+  container.style.height = '100%';
+  container.style.position = 'absolute';
+  container.style.inset = '0';
+
+  const iframe = document.createElement('iframe');
+  iframe.src = tab.url;
+  iframe.title = tab.title;
+  iframe.className = 'w-full h-full border-0';
+  iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-forms allow-popups allow-modals');
+  iframe.setAttribute('allow', 'clipboard-read; clipboard-write; fullscreen');
+  iframe.setAttribute('role', 'region');
+
+  const entry: IframeEntry = { iframe, container, loaded: false };
+
+  iframe.addEventListener('load', () => {
+    entry.loaded = true;
+    onLoad(tab.id);
+  });
+
+  container.appendChild(iframe);
+  iframeStore.set(tab.id, entry);
+
+  return entry;
+}
+
+function removeIframe(tabId: string) {
+  const entry = iframeStore.get(tabId);
+  if (entry) {
+    entry.container.remove();
+    iframeStore.delete(tabId);
+  }
 }
 
 /**
- * Hook to track loading state of iframes
+ * Hook that imperatively manages iframe DOM elements.
+ * Iframes are created via direct DOM manipulation and stored
+ * in a module-level Map, making them immune to React re-renders and HMR.
  */
-function useIframeLoading(tabs: Tab[]) {
-  const [loadingState, setLoadingState] = useState<Map<string, boolean>>(new Map());
-
-  useEffect(() => {
-    // Initialize loading state for new tabs
-    setLoadingState((prev) => {
-      const next = new Map(prev);
-      const currentTabIds = new Set(tabs.map((tab) => tab.id));
-
-      // Remove state for deleted tabs
-      for (const [id] of next.entries()) {
-        if (!currentTabIds.has(id)) {
-          next.delete(id);
-        }
-      }
-
-      // Add loading state for new tabs (starts as loading)
-      for (const tab of tabs) {
-        if (!next.has(tab.id)) {
-          next.set(tab.id, false); // false = still loading
-        }
-      }
-
-      return next;
-    });
-  }, [tabs]);
+function useImperativeIframes(tabs: Tab[]) {
+  const [loadingState, setLoadingState] = useState<Map<string, boolean>>(() => {
+    // Initialize from existing store (survives HMR)
+    const initial = new Map<string, boolean>();
+    for (const tab of tabs) {
+      const entry = iframeStore.get(tab.id);
+      initial.set(tab.id, entry?.loaded ?? false);
+    }
+    return initial;
+  });
 
   const handleLoad = useCallback((tabId: string) => {
     setLoadingState((prev) => {
       const next = new Map(prev);
-      next.set(tabId, true); // true = loaded
+      next.set(tabId, true);
       return next;
     });
   }, []);
 
+  useEffect(() => {
+    const currentTabIds = new Set(tabs.map((t) => t.id));
+
+    // Remove iframes for tabs that no longer exist
+    for (const [id] of iframeStore.entries()) {
+      if (!currentTabIds.has(id)) {
+        removeIframe(id);
+      }
+    }
+
+    // Ensure iframes exist for all current tabs
+    for (const tab of tabs) {
+      getOrCreateIframe(tab, handleLoad);
+    }
+
+    // Sync loading state
+    setLoadingState((prev) => {
+      const next = new Map<string, boolean>();
+      for (const tab of tabs) {
+        const entry = iframeStore.get(tab.id);
+        next.set(tab.id, entry?.loaded ?? prev.get(tab.id) ?? false);
+      }
+      return next;
+    });
+  }, [tabs, handleLoad]);
+
   return { loadingState, handleLoad };
 }
 
+/**
+ * A container div that imperatively hosts an iframe DOM element.
+ * The iframe is appended via useEffect, not rendered by React,
+ * so it survives HMR and re-renders.
+ */
+function IframeHost({ tabId, visible }: { tabId: string; visible: boolean }) {
+  const hostRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const host = hostRef.current;
+    const entry = iframeStore.get(tabId);
+    if (!host || !entry) return;
+
+    // Append the iframe's container to this host element
+    host.appendChild(entry.container);
+
+    return () => {
+      // On cleanup, move the container to a hidden offscreen holder
+      // so it's not destroyed when React unmounts this component
+      if (entry.container.parentElement === host) {
+        host.removeChild(entry.container);
+      }
+    };
+  }, [tabId]);
+
+  // Control visibility without unmounting
+  return (
+    <div
+      ref={hostRef}
+      className="w-full h-full relative"
+      style={{ display: visible ? 'block' : 'none' }}
+    />
+  );
+}
+
 export function IframePanel({ tabGroup, onUpdatePairRatios }: IframePanelProps) {
-  // Create and maintain portal nodes for all tabs
-  // This ensures iframes stay alive even when hidden
-  const portals = useIframePortals(tabGroup.tabs);
-  const { loadingState, handleLoad } = useIframeLoading(tabGroup.tabs);
+  const { loadingState } = useImperativeIframes(tabGroup.tabs);
 
   const activeTab = tabGroup.tabs.find(
     (t) => t.id === tabGroup.activeItemId
@@ -101,57 +185,22 @@ export function IframePanel({ tabGroup, onUpdatePairRatios }: IframePanelProps) 
 
   return (
     <>
-      {/*
-        Step 1: Render all iframe contents in InPortals
-        These iframes are created once and stay in memory
-      */}
+      {/* Hidden hosts for non-visible iframes — keeps them alive in the DOM */}
       {tabGroup.tabs.map((tab) => {
-        const portalNode = portals.get(tab.id);
-        if (!portalNode) return null;
-
-        return (
-          <InPortal key={tab.id} node={portalNode}>
-            <iframe
-              src={tab.url}
-              title={tab.title}
-              className="w-full h-full border-0"
-              sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals"
-              allow="clipboard-read; clipboard-write; fullscreen"
-              role="region"
-              onLoad={() => handleLoad(tab.id)}
-            />
-          </InPortal>
-        );
+        if (visibleTabIds.has(tab.id)) return null;
+        return <IframeHost key={tab.id} tabId={tab.id} visible={false} />;
       })}
 
-      {/*
-        Step 2: Render hidden OutPortals for non-visible tabs
-        Using display:none keeps iframes running in background
-      */}
-      {tabGroup.tabs.map((tab) => {
-        const portalNode = portals.get(tab.id);
-        if (!portalNode || visibleTabIds.has(tab.id)) return null;
-
-        return (
-          <div key={`hidden-${tab.id}`} style={{ display: 'none' }}>
-            <OutPortal node={portalNode} />
-          </div>
-        );
-      })}
-
-      {/*
-        Step 3: Render visible tab(s) - either single tab or split pair
-      */}
+      {/* Visible tab(s) */}
       {activePair ? (
         <PairView
           activePair={activePair}
           tabGroup={tabGroup}
-          portals={portals}
           loadingState={loadingState}
           onUpdatePairRatios={onUpdatePairRatios}
         />
       ) : activeTab ? (
-        <SingleTabView activeTab={activeTab} portals={portals} loadingState={loadingState} />
+        <SingleTabView activeTab={activeTab} loadingState={loadingState} />
       ) : (
         <EmptyView />
       )}
@@ -159,42 +208,31 @@ export function IframePanel({ tabGroup, onUpdatePairRatios }: IframePanelProps) 
   );
 }
 
-/**
- * Renders a single active tab
- */
 function SingleTabView({
   activeTab,
-  portals,
   loadingState,
 }: {
   activeTab: Tab;
-  portals: Map<string, ReturnType<typeof createHtmlPortalNode>>;
   loadingState: Map<string, boolean>;
 }) {
-  const portalNode = portals.get(activeTab.id);
   const isLoaded = loadingState.get(activeTab.id) ?? false;
 
   return (
-    <div className="flex-1 min-h-0 relative [&>div]:h-full">
-      {portalNode && <OutPortal node={portalNode} />}
+    <div className="flex-1 min-h-0 relative">
+      <IframeHost tabId={activeTab.id} visible={true} />
       {!isLoaded && <LoadingOverlay />}
     </div>
   );
 }
 
-/**
- * Renders a split pair of tabs
- */
 function PairView({
   activePair,
   tabGroup,
-  portals,
   loadingState,
   onUpdatePairRatios,
 }: {
   activePair: { id: string; tabIds: string[]; ratios: number[] };
   tabGroup: TabGroup;
-  portals: Map<string, ReturnType<typeof createHtmlPortalNode>>;
   loadingState: Map<string, boolean>;
   onUpdatePairRatios: (pairId: string, ratios: number[]) => void;
 }) {
@@ -216,15 +254,13 @@ function PairView({
       onLayoutChanged={handleLayoutChange}
     >
       {pairTabs.map((tab, i) => {
-        const portalNode = portals.get(tab.id);
         const isLoaded = loadingState.get(tab.id) ?? false;
-        if (!portalNode) return null;
 
         return (
           <React.Fragment key={tab.id}>
             <Panel id={tab.id} defaultSize={percentages[i]} minSize={10}>
-              <div className="relative w-full h-full [&>div]:h-full">
-                <OutPortal node={portalNode} />
+              <div className="relative w-full h-full">
+                <IframeHost tabId={tab.id} visible={true} />
                 {!isLoaded && <LoadingOverlay />}
               </div>
             </Panel>
@@ -238,9 +274,6 @@ function PairView({
   );
 }
 
-/**
- * Renders empty state when no tab is selected
- */
 function EmptyView() {
   return (
     <div className="flex-1 flex items-center justify-center text-neutral-500">
@@ -249,9 +282,6 @@ function EmptyView() {
   );
 }
 
-/**
- * Loading overlay shown while iframe is loading
- */
 function LoadingOverlay() {
   return (
     <div className="absolute inset-0 bg-neutral-950 flex items-center justify-center z-10">
