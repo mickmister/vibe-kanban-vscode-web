@@ -224,7 +224,7 @@ function SingleTabView({
   const isLoaded = loadingState.get(activeTab.id) ?? false;
 
   return (
-    <div className="flex-1 min-h-0 relative">
+    <div className="flex-1 min-h-0 relative h-full">
       <IframeHost tabId={activeTab.id} visible={true} />
       {!isLoaded && <LoadingOverlay />}
     </div>
