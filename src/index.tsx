@@ -114,6 +114,55 @@ springboard.registerModule('workspace', {rpcMode: 'remote'}, async (moduleAPI) =
       });
     },
 
+    addVKWorkspace: async (args: {
+      taskAttemptId: string;
+      name: string;
+      containerRef: string;
+      activeSpaceId: string;
+    }) => {
+      return workspaceState.setStateImmer((draft) => {
+        const space = draft.spaces.find((s) => s.id === args.activeSpaceId);
+        if (!space) return;
+
+        // Generate IDs for tab group and tabs
+        const tabGroupId = `tg_${draft.nextId++}`;
+        const kanbanTabId = `tab_${draft.nextId++}`;
+        const codeTabId = `tab_${draft.nextId++}`;
+        const pairId = `pair_${draft.nextId++}`;
+
+        // Create the new tab group
+        draft.tabGroups.push({
+          id: tabGroupId,
+          label: args.name.length > 30 ? args.name.substring(0, 27) + '...' : args.name,
+          tabs: [
+            {
+              id: kanbanTabId,
+              title: 'Kanban',
+              url: `/workspaces/${args.taskAttemptId}`,
+            },
+            {
+              id: codeTabId,
+              title: 'Code',
+              url: `/?folder=${args.containerRef}`,
+            },
+          ],
+          pairs: [
+            {
+              id: pairId,
+              tabIds: [kanbanTabId, codeTabId],
+              ratios: [50, 50],
+            },
+          ],
+          order: space.tabGroupIds.length,
+        });
+
+        // Add tab group to the space
+        space.tabGroupIds.push(tabGroupId);
+
+        return { tabGroupId, pairId };
+      });
+    },
+
     reorderTabGroups: async (args: { sourceId: string; targetId: string; activeSpaceId: string }) => {
       workspaceState.setStateImmer((draft) => {
         const space = draft.spaces.find((s) => s.id === args.activeSpaceId);
@@ -193,6 +242,14 @@ springboard.registerModule('workspace', {rpcMode: 'remote'}, async (moduleAPI) =
         if (result?.pairId) {
           sessionNav.selectPair(result.tabGroupId, result.pairId);
         }
+      },
+      addVKWorkspace: (args: {
+        taskAttemptId: string;
+        name: string;
+        containerRef: string;
+        activeSpaceId: string;
+      }) => {
+        return actions.addVKWorkspace(args);
       },
     };
 

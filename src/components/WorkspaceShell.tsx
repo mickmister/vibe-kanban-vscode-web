@@ -15,6 +15,12 @@ export type WorkspaceActions = {
   updatePairRatios: (args: { tabGroupId: string; pairId: string; ratios: number[] }) => void;
   reorderTabGroups: (args: { sourceId: string; targetId: string }) => void;
   closeActiveTab: () => void;
+  addVKWorkspace: (args: {
+    taskAttemptId: string;
+    name: string;
+    containerRef: string;
+    activeSpaceId: string;
+  }) => Promise<{ tabGroupId: string; pairId: string } | undefined>;
 };
 
 export type SessionActions = {
@@ -81,6 +87,25 @@ export function WorkspaceShell({ workspace, session, actions, sessionActions }: 
     actions.addTab({ tabGroupId: addTabTargetGroupId, title, url });
   };
 
+  const handleAddVKWorkspace = async (
+    taskAttemptId: string,
+    name: string,
+    containerRef: string
+  ) => {
+    const result = await actions.addVKWorkspace({
+      taskAttemptId,
+      name,
+      containerRef,
+      activeSpaceId: session.activeSpaceId,
+    });
+
+    // Auto-select the new pair
+    if (result) {
+      sessionActions.setActiveTabGroup(result.tabGroupId);
+      sessionActions.selectPair(result.tabGroupId, result.pairId);
+    }
+  };
+
   // --- Derived state ---
   const activeSpace = workspace.spaces.find(
     (s) => s.id === session.activeSpaceId
@@ -125,6 +150,7 @@ export function WorkspaceShell({ workspace, session, actions, sessionActions }: 
         isOpen={addTabModalOpen}
         onClose={() => setAddTabModalOpen(false)}
         onAdd={handleAddTab}
+        onAddVKWorkspace={handleAddVKWorkspace}
       />
     </div>
   );
