@@ -1,9 +1,0 @@
-<div style="max-height: 100%; max-width: 100%; flex-grow: 1; touch-action: pan-y;">
-    <div class="relative w-full h-full">
-        <div>
-            <iframe src="..." title="Kanban" class="w-full h-full border-0"
-                sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals"
-                allow="clipboard-read; clipboard-write; fullscreen" role="region"></iframe
-        ></div>
-    </div>
-</div>
