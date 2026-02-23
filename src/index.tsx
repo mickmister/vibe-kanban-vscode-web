@@ -1,16 +1,18 @@
+// @platform "browser"
 import '@vitejs/plugin-react/preamble';
 import './styles';
 
 import React from 'react';
-import springboard from 'springboard';
-import { createDefaultWorkspace } from './types';
-import type { WorkspaceState } from './types';
-
-// @platform "browser"
 import { HeroUIProvider } from '@heroui/react';
 import { WorkspaceShell } from './components/WorkspaceShell';
 import { useSessionWorkspaceNav } from './sessionState';
 // @platform end
+
+import springboard from 'springboard';
+import { createDefaultWorkspace } from './types';
+import type { WorkspaceState } from './types';
+
+(globalThis as {useHashRouter?: boolean}).useHashRouter = true
 
 console.log('outside of module')
 springboard.registerModule('workspace', {rpcMode: 'remote'}, async (moduleAPI) => {
