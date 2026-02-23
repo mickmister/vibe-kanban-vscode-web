@@ -1,3 +1,4 @@
+import '@vitejs/plugin-react/preamble';
 import './styles';
 
 import React from 'react';
