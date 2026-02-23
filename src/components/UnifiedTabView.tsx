@@ -175,6 +175,15 @@ export function UnifiedTabView({
             onTabClose={handleTabClose}
             onContextMenu={handleContextMenu}
             draggable={true}
+            pinnedRight={
+              <button
+                onClick={() => onOpenAddTabModal(activeTabGroupId)}
+                className="bg-transparent hover:bg-neutral-700 text-neutral-400 hover:text-neutral-200 px-3 py-1 rounded transition-colors text-lg font-light"
+                title="Add new tab"
+              >
+                +
+              </button>
+            }
           />
         </div>
 
