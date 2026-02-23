@@ -167,7 +167,19 @@ export function UnifiedTabView({
         onMouseLeave={() => setIsHovering(false)}
       >
         {/* Address bar at the very top */}
-        {activeTabGroup && <AddressBar tabGroup={activeTabGroup} />}
+        {activeTabGroup && (
+          <AddressBar
+            tabGroup={activeTabGroup}
+            activeItemId={sessionActions.getActiveItem(activeTabGroup.id)}
+            onNavigate={(tabId, newUrl) =>
+              actions.updateTabUrl({
+                tabGroupId: activeTabGroup.id,
+                tabId,
+                newUrl,
+              })
+            }
+          />
+        )}
 
         {/* Chrome tabs below address bar */}
         <div className="bg-neutral-900 border-b border-neutral-800">

@@ -21,6 +21,7 @@ export type WorkspaceActions = {
     containerRef: string;
     activeSpaceId: string;
   }) => Promise<{ tabGroupId: string; pairId: string } | undefined>;
+  updateTabUrl: (args: { tabGroupId: string; tabId: string; newUrl: string }) => void;
 };
 
 export type SessionActions = {
