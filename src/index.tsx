@@ -131,6 +131,23 @@ springboard.registerModule('workspace', {rpcMode: 'remote'}, async (moduleAPI) =
       });
     },
 
+    deletePair: async (args: { tabGroupId: string; pairId: string }) => {
+      let firstTabId: string | undefined;
+
+      workspaceState.setStateImmer((draft) => {
+        const tg = draft.tabGroups.find((g) => g.id === args.tabGroupId);
+        if (!tg) return;
+
+        const pair = tg.pairs.find((p) => p.id === args.pairId);
+        if (pair) {
+          firstTabId = pair.tabIds[0];
+          tg.pairs = tg.pairs.filter((p) => p.id !== args.pairId);
+        }
+      });
+
+      return { firstTabId, tabGroupId: args.tabGroupId };
+    },
+
     addVKWorkspace: async (args: {
       taskAttemptId: string;
       name: string;
@@ -274,6 +291,13 @@ springboard.registerModule('workspace', {rpcMode: 'remote'}, async (moduleAPI) =
         // Auto-select the newly created pair
         if (result?.pairId) {
           sessionNav.selectPair(result.tabGroupId, result.pairId);
+        }
+      },
+      deletePair: async (args: { tabGroupId: string; pairId: string }) => {
+        const result = await actions.deletePair(args);
+        // Auto-select the first tab from the deleted pair
+        if (result?.firstTabId) {
+          sessionNav.selectTab(result.tabGroupId, result.firstTabId);
         }
       },
       addVKWorkspace: (args: {

@@ -12,6 +12,7 @@ export type WorkspaceActions = {
   closeTab: (args: { tabGroupId: string; tabId: string }) => void;
   addTab: (args: { tabGroupId: string; title: string; url: string }) => void;
   createPair: (args: { tabGroupId: string; tabIds: string[] }) => void;
+  deletePair: (args: { tabGroupId: string; pairId: string }) => void;
   updatePairRatios: (args: { tabGroupId: string; pairId: string; ratios: number[] }) => void;
   reorderTabGroups: (args: { sourceId: string; targetId: string }) => void;
   closeActiveTab: () => void;

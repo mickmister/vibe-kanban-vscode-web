@@ -3,6 +3,7 @@ import { ChromeTabs } from '../../react-chrome-tabs/src/ChromeTabs';
 import type { TabProperties } from '../../react-chrome-tabs/src/chrome-tabs';
 import { AddressBar } from './AddressBar';
 import { IframePanel } from './IframePanel';
+import { TabContextMenu } from './TabContextMenu';
 import type { TabGroup } from '../types';
 import type { WorkspaceActions, SessionActions } from './WorkspaceShell';
 
@@ -31,8 +32,14 @@ export function UnifiedTabView({
 }: UnifiedTabViewProps) {
   const [isPinned, setIsPinned] = useState(false);
   const [isHovering, setIsHovering] = useState(false);
+  const [contextMenu, setContextMenu] = useState<{
+    tabId: string;
+    position: { x: number; y: number };
+  } | null>(null);
   const topBarRef = useRef<HTMLDivElement>(null);
   const hoverTriggerRef = useRef<HTMLDivElement>(null);
+  const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const longPressTabIdRef = useRef<string | null>(null);
 
   const isVisible = isPinned || isHovering;
 
@@ -140,8 +147,92 @@ export function UnifiedTabView({
 
   const handleContextMenu = (tabId: string, event: MouseEvent) => {
     event.preventDefault();
-    // TODO: Implement context menu for creating pairs, etc.
+
+    // Don't show context menu for group labels
+    if (tabId.startsWith('group-label-')) return;
+
+    setContextMenu({
+      tabId,
+      position: { x: event.clientX, y: event.clientY },
+    });
   };
+
+  const handleCreatePair = (tabIds: string[]) => {
+    // Find which group contains the first tab
+    for (const group of tabGroups) {
+      if (group.tabs.some((t) => t.id === tabIds[0])) {
+        actions.createPair({ tabGroupId: group.id, tabIds });
+        return;
+      }
+    }
+  };
+
+  const handleSplitPair = (pairId: string) => {
+    // Find which group contains this pair and remove it
+    for (const group of tabGroups) {
+      const pair = group.pairs.find((p) => p.id === pairId);
+      if (pair) {
+        actions.deletePair({ tabGroupId: group.id, pairId });
+        return;
+      }
+    }
+  };
+
+  // Long-press support for mobile
+  useEffect(() => {
+    const handleTouchStart = (e: TouchEvent) => {
+      const target = e.target as HTMLElement;
+      const tabElement = target.closest('[data-tab-id]');
+
+      if (tabElement) {
+        const tabId = tabElement.getAttribute('data-tab-id');
+        if (tabId && !tabId.startsWith('group-label-')) {
+          longPressTabIdRef.current = tabId;
+
+          // Start long-press timer (500ms)
+          longPressTimerRef.current = setTimeout(() => {
+            const touch = e.touches[0];
+            if (touch && longPressTabIdRef.current) {
+              setContextMenu({
+                tabId: longPressTabIdRef.current,
+                position: { x: touch.clientX, y: touch.clientY },
+              });
+            }
+          }, 500);
+        }
+      }
+    };
+
+    const handleTouchEnd = () => {
+      if (longPressTimerRef.current) {
+        clearTimeout(longPressTimerRef.current);
+        longPressTimerRef.current = null;
+      }
+      longPressTabIdRef.current = null;
+    };
+
+    const handleTouchMove = () => {
+      // Cancel long-press if user moves finger
+      if (longPressTimerRef.current) {
+        clearTimeout(longPressTimerRef.current);
+        longPressTimerRef.current = null;
+      }
+    };
+
+    document.addEventListener('touchstart', handleTouchStart);
+    document.addEventListener('touchend', handleTouchEnd);
+    document.addEventListener('touchmove', handleTouchMove);
+
+    return () => {
+      document.removeEventListener('touchstart', handleTouchStart);
+      document.removeEventListener('touchend', handleTouchEnd);
+      document.removeEventListener('touchmove', handleTouchMove);
+
+      if (longPressTimerRef.current) {
+        clearTimeout(longPressTimerRef.current);
+      }
+    };
+  }, []);
 
   const activeTabGroup = tabGroups.find((tg) => tg.id === activeTabGroupId);
 
@@ -237,6 +328,22 @@ export function UnifiedTabView({
           </div>
         )}
       </div>
+
+      {/* Context menu */}
+      {contextMenu && activeTabGroup && (
+        <TabContextMenu
+          position={contextMenu.position}
+          tabId={contextMenu.tabId}
+          tabGroup={activeTabGroup}
+          activeItemId={sessionActions.getActiveItem(activeTabGroup.id)}
+          onClose={() => setContextMenu(null)}
+          onCreatePair={handleCreatePair}
+          onCloseTab={(tabId) =>
+            actions.closeTab({ tabGroupId: activeTabGroup.id, tabId })
+          }
+          onSplitPair={handleSplitPair}
+        />
+      )}
     </div>
   );
 }
