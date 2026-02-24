@@ -32,19 +32,6 @@
 		}
 	}
 
-	@vibe_kanban_assets {
-		path /assets/index-C-WSeiNJ.js
-		path /assets/index-CtIqwZu9.css
-	}
-
-	handle @vibe_kanban_assets {
-		reverse_proxy localhost:3007 {
-			header_up Host {upstream_hostport}
-			header_up Upgrade {http.request.header.Upgrade}
-			header_up Connection {http.request.header.Connection}
-		}
-	}
-
 	# Vibe Dashboard app
 	@vibe_dashboard_root {
 		path /dashboard
@@ -83,10 +70,31 @@
 
 	# Wrapper app — static assets and API routes
 	handle @vibe_dashboard_assets {
-		reverse_proxy localhost:3005 {
-			header_up Host {upstream_hostport}
-			header_up Upgrade {http.request.header.Upgrade}
-			header_up Connection {http.request.header.Connection}
+		# Proxy /assets to wrapper first; if missing there, fall back to vibe-kanban.
+		@asset_path path /assets/*
+		handle @asset_path {
+			reverse_proxy localhost:3005 {
+				header_up Host {upstream_hostport}
+				header_up Upgrade {http.request.header.Upgrade}
+				header_up Connection {http.request.header.Connection}
+
+				@wrapper_asset_404 status 404
+				handle_response @wrapper_asset_404 {
+					reverse_proxy localhost:3007 {
+						header_up Host {upstream_hostport}
+						header_up Upgrade {http.request.header.Upgrade}
+						header_up Connection {http.request.header.Connection}
+					}
+				}
+			}
+		}
+
+		handle {
+			reverse_proxy localhost:3005 {
+				header_up Host {upstream_hostport}
+				header_up Upgrade {http.request.header.Upgrade}
+				header_up Connection {http.request.header.Connection}
+			}
 		}
 	}
 
