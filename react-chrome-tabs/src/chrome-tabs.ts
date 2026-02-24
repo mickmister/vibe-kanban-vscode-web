@@ -348,6 +348,9 @@ class ChromeTabs {
       this.emit("contextmenu", { tabEl, event });
     };
     tabEl.addEventListener("mousedown", (e) => {
+      // Only handle left-click (button 0), ignore right-click (2) and middle-click (1)
+      if (e.button !== 0) return;
+
       const target = e.target as HTMLElement | null;
       if (!target) return;
       if (target.closest(".chrome-tab-close")) {

@@ -40,7 +40,6 @@ export function UnifiedTabView({
   const hoverTriggerRef = useRef<HTMLDivElement>(null);
   const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
   const longPressTabIdRef = useRef<string | null>(null);
-  const contextMenuJustOpenedRef = useRef(false);
 
   const isVisible = isPinned || isHovering;
 
@@ -105,12 +104,6 @@ export function UnifiedTabView({
   }, [tabGroups, activeTabGroupId, sessionActions]);
 
   const handleTabActive = (tabId: string) => {
-    // Don't activate tab if context menu was just opened
-    if (contextMenuJustOpenedRef.current) {
-      contextMenuJustOpenedRef.current = false;
-      return;
-    }
-
     // Check if it's a group label
     if (tabId.startsWith('group-label-')) {
       const groupId = tabId.replace('group-label-', '');
@@ -158,9 +151,6 @@ export function UnifiedTabView({
     // Don't show context menu for group labels
     if (tabId.startsWith('group-label-')) return;
 
-    // Mark that context menu was just opened to prevent tab activation
-    contextMenuJustOpenedRef.current = true;
-
     setContextMenu({
       tabId,
       position: { x: event.clientX, y: event.clientY },
@@ -203,9 +193,6 @@ export function UnifiedTabView({
           longPressTimerRef.current = setTimeout(() => {
             const touch = e.touches[0];
             if (touch && longPressTabIdRef.current) {
-              // Mark that context menu was just opened to prevent tab activation
-              contextMenuJustOpenedRef.current = true;
-
               setContextMenu({
                 tabId: longPressTabIdRef.current,
                 position: { x: touch.clientX, y: touch.clientY },
