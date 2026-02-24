@@ -79,6 +79,28 @@ springboard.registerModule('workspace', {rpcMode: 'remote'}, async (moduleAPI) =
       });
     },
 
+    addTabGroup: async (args: { spaceId: string; label: string }) => {
+      let tabGroupId: string | undefined;
+
+      workspaceState.setStateImmer((draft) => {
+        const space = draft.spaces.find((s) => s.id === args.spaceId);
+        if (!space) return;
+
+        tabGroupId = `tg_${draft.nextId++}`;
+
+        draft.tabGroups.push({
+          id: tabGroupId,
+          label: args.label,
+          tabs: [],
+          pairs: [],
+          order: space.tabGroupIds.length,
+        });
+
+        space.tabGroupIds.push(tabGroupId);
+      });
+
+      return { tabGroupId, spaceId: args.spaceId };
+    },
 
     closeTab: async (args: { tabGroupId: string; tabId: string }) => {
       workspaceState.setStateImmer((draft) => {

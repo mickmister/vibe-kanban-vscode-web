@@ -17,11 +17,18 @@ interface AddTabModalProps {
   onClose: () => void;
   onAdd: (title: string, url: string) => void;
   onAddVKWorkspace?: (taskAttemptId: string, name: string, containerRef: string) => void;
+  onAddTabGroup?: (label: string) => void;
 }
 
 const ORIGIN = 'https://jamtools.dev';
 
 const PRESETS = [
+  {
+    key: 'tab-group',
+    title: 'Empty Tab Group',
+    url: '',
+    description: 'Create a new tab group with no tabs',
+  },
   {
     key: 'vk-workspace',
     title: 'VK Workspace',
@@ -54,11 +61,13 @@ const PRESETS = [
   },
 ];
 
-export function AddTabModal({ isOpen, onClose, onAdd, onAddVKWorkspace }: AddTabModalProps) {
+export function AddTabModal({ isOpen, onClose, onAdd, onAddVKWorkspace, onAddTabGroup }: AddTabModalProps) {
   const [title, setTitle] = useState('');
   const [url, setUrl] = useState('');
   const [showCustom, setShowCustom] = useState(false);
   const [showVKWorkspace, setShowVKWorkspace] = useState(false);
+  const [showTabGroupInput, setShowTabGroupInput] = useState(false);
+  const [tabGroupLabel, setTabGroupLabel] = useState('');
 
   const handlePresetSelect = (key: string) => {
     const preset = PRESETS.find((p) => p.key === key);
@@ -71,6 +80,11 @@ export function AddTabModal({ isOpen, onClose, onAdd, onAddVKWorkspace }: AddTab
 
     if (key === 'vk-workspace') {
       setShowVKWorkspace(true);
+      return;
+    }
+
+    if (key === 'tab-group') {
+      setShowTabGroupInput(true);
       return;
     }
 
@@ -96,11 +110,21 @@ export function AddTabModal({ isOpen, onClose, onAdd, onAddVKWorkspace }: AddTab
     handleClose();
   };
 
+  const handleTabGroupSubmit = () => {
+    const label = tabGroupLabel.trim();
+    if (label && onAddTabGroup) {
+      onAddTabGroup(label);
+      handleClose();
+    }
+  };
+
   const handleClose = () => {
     setTitle('');
     setUrl('');
+    setTabGroupLabel('');
     setShowCustom(false);
     setShowVKWorkspace(false);
+    setShowTabGroupInput(false);
     onClose();
   };
 
@@ -108,9 +132,11 @@ export function AddTabModal({ isOpen, onClose, onAdd, onAddVKWorkspace }: AddTab
     <>
       <Modal isOpen={isOpen} onClose={handleClose} size="sm" backdrop="blur">
         <ModalContent className="bg-neutral-900 border border-neutral-800">
-          <ModalHeader className="text-sm">Add Tab</ModalHeader>
+          <ModalHeader className="text-sm">
+            {showTabGroupInput ? 'New Tab Group' : 'Add Tab'}
+          </ModalHeader>
           <ModalBody>
-            {!showCustom ? (
+            {!showCustom && !showTabGroupInput ? (
               <Listbox
                 aria-label="Tab presets"
                 onAction={(key) => handlePresetSelect(key as string)}
@@ -125,6 +151,23 @@ export function AddTabModal({ isOpen, onClose, onAdd, onAddVKWorkspace }: AddTab
                   </ListboxItem>
                 ))}
               </Listbox>
+            ) : showTabGroupInput ? (
+              <div className="space-y-3">
+                <Input
+                  label="Tab Group Name"
+                  size="sm"
+                  value={tabGroupLabel}
+                  onChange={(e) => setTabGroupLabel(e.target.value)}
+                  placeholder="Development"
+                  autoFocus
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleTabGroupSubmit();
+                  }}
+                  classNames={{
+                    inputWrapper: 'bg-neutral-800',
+                  }}
+                />
+              </div>
             ) : (
               <div className="space-y-3">
                 <Input
@@ -165,6 +208,20 @@ export function AddTabModal({ isOpen, onClose, onAdd, onAddVKWorkspace }: AddTab
               </Button>
               <Button size="sm" color="primary" onPress={handleCustomSubmit}>
                 Add
+              </Button>
+            </ModalFooter>
+          )}
+          {showTabGroupInput && (
+            <ModalFooter>
+              <Button
+                size="sm"
+                variant="flat"
+                onPress={() => setShowTabGroupInput(false)}
+              >
+                Back
+              </Button>
+              <Button size="sm" color="primary" onPress={handleTabGroupSubmit}>
+                Create
               </Button>
             </ModalFooter>
           )}

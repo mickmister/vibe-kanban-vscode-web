@@ -9,6 +9,7 @@ export type WorkspaceActions = {
   addSpace: (args: { name: string }) => Promise<{ spaceId: string; tabGroupId: string } | undefined>;
   deleteSpace: (args: { spaceId: string }) => Promise<{ wasDeleted: boolean; deletedSpaceId?: string } | undefined>;
   renameSpace: (args: { spaceId: string; name: string }) => void;
+  addTabGroup: (args: { spaceId: string; label: string }) => void;
   closeTab: (args: { tabGroupId: string; tabId: string }) => void;
   addTab: (args: { tabGroupId: string; title: string; url: string }) => void;
   createPair: (args: { tabGroupId: string; tabIds: string[] }) => void;
@@ -108,6 +109,18 @@ export function WorkspaceShell({ workspace, session, actions, sessionActions }: 
     }
   };
 
+  const handleAddTabGroup = async (label: string) => {
+    const result = await actions.addTabGroup({
+      spaceId: session.activeSpaceId,
+      label,
+    });
+
+    // Auto-select the new tab group
+    if (result?.tabGroupId) {
+      sessionActions.setActiveTabGroup(result.tabGroupId);
+    }
+  };
+
   // --- Derived state ---
   const activeSpace = workspace.spaces.find(
     (s) => s.id === session.activeSpaceId
@@ -154,6 +167,7 @@ export function WorkspaceShell({ workspace, session, actions, sessionActions }: 
           onClose={() => setAddTabModalOpen(false)}
           onAdd={handleAddTab}
           onAddVKWorkspace={handleAddVKWorkspace}
+          onAddTabGroup={handleAddTabGroup}
         />
       )}
     </div>
