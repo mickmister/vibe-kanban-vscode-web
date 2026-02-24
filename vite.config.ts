@@ -10,8 +10,8 @@ import { playwright } from '@vitest/browser-playwright';
 const dirname = typeof __dirname !== 'undefined' ? __dirname : path.dirname(fileURLToPath(import.meta.url));
 
 let serverPort = 1337;
-if (process.env.PORT) {
-  serverPort = parseInt(process.env.PORT);
+if (process.env.SERVER_PORT || process.env.PORT) {
+  serverPort = parseInt(process.env.SERVER_PORT || process.env.PORT!);
 }
 
 // More info at: https://storybook.js.org/docs/next/writing-tests/integrations/vitest-addon
