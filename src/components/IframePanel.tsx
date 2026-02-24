@@ -17,6 +17,7 @@ type IframeEntry = {
   iframe: HTMLIFrameElement;
   container: HTMLDivElement;
   loaded: boolean;
+  contentReady: boolean;
   listeners: Set<() => void>;
 };
 
@@ -56,17 +57,85 @@ function getOrCreateIframe(tab: Tab): IframeEntry {
   iframe.setAttribute('allow', 'clipboard-read; clipboard-write; fullscreen');
   iframe.setAttribute('role', 'region');
 
-  const entry: IframeEntry = { iframe, container, loaded: false, listeners: new Set() };
+  const entry: IframeEntry = { iframe, container, loaded: false, contentReady: false, listeners: new Set() };
 
   iframe.addEventListener('load', () => {
     entry.loaded = true;
     entry.listeners.forEach((fn) => fn());
+
+    // Start checking if content is ready (not showing white screen)
+    checkContentReady(iframe, entry);
   });
 
   container.appendChild(iframe);
   iframeStore.set(tab.id, entry);
 
   return entry;
+}
+
+/**
+ * Checks if the iframe content is actually ready by detecting white screens.
+ * For same-origin iframes, we can check the background color to see if the SPA has loaded.
+ */
+function checkContentReady(iframe: HTMLIFrameElement, entry: IframeEntry) {
+  try {
+    // Try to access iframe content (will throw if cross-origin)
+    const doc = iframe.contentDocument || iframe.contentWindow?.document;
+    if (!doc) {
+      // Can't access content (likely cross-origin), assume ready after load
+      entry.contentReady = true;
+      entry.listeners.forEach((fn) => fn());
+      return;
+    }
+
+    // Check if the background is white (indicating SPA still loading)
+    const checkInterval = setInterval(() => {
+      try {
+        const body = doc.body;
+        if (!body) return;
+
+        const bgColor = window.getComputedStyle(body).backgroundColor;
+
+        // Check if background is white or transparent
+        const isWhite =
+          bgColor === 'rgb(255, 255, 255)' ||
+          bgColor === '#ffffff' ||
+          bgColor === '#fff' ||
+          bgColor === 'white' ||
+          bgColor === 'rgba(0, 0, 0, 0)' ||
+          bgColor === 'transparent';
+
+        // Also check if there's actual content rendered
+        const hasContent = body.children.length > 0 &&
+          body.offsetHeight > 0 &&
+          body.scrollHeight > 100; // Some minimum content height
+
+        if (!isWhite || hasContent) {
+          // Content is ready!
+          entry.contentReady = true;
+          entry.listeners.forEach((fn) => fn());
+          clearInterval(checkInterval);
+        }
+      } catch (e) {
+        // Lost access to iframe (navigation happened), assume ready
+        entry.contentReady = true;
+        entry.listeners.forEach((fn) => fn());
+        clearInterval(checkInterval);
+      }
+    }, 100); // Check every 100ms
+
+    // Timeout after 10 seconds to prevent infinite checking
+    setTimeout(() => {
+      clearInterval(checkInterval);
+      entry.contentReady = true;
+      entry.listeners.forEach((fn) => fn());
+    }, 10000);
+
+  } catch (e) {
+    // Cross-origin iframe, can't check content, assume ready
+    entry.contentReady = true;
+    entry.listeners.forEach((fn) => fn());
+  }
 }
 
 function removeIframe(tabId: string) {
@@ -92,7 +161,8 @@ function useImperativeIframes(tabs: Tab[]) {
     const initial = new Map<string, boolean>();
     for (const tab of tabs) {
       const entry = iframeStore.get(tab.id);
-      initial.set(tab.id, entry?.loaded ?? false);
+      // Only consider ready when BOTH loaded AND content is ready
+      initial.set(tab.id, (entry?.loaded && entry?.contentReady) ?? false);
     }
     return initial;
   });
@@ -105,8 +175,8 @@ function useImperativeIframes(tabs: Tab[]) {
       const entry = iframeStore.get(tab.id);
       if (!entry) continue;
 
-      // If already loaded, update state immediately
-      if (entry.loaded) {
+      // If already loaded AND content ready, update state immediately
+      if (entry.loaded && entry.contentReady) {
         setLoadingState((prev) => {
           if (prev.get(tab.id) === true) return prev;
           const next = new Map(prev);
@@ -116,13 +186,16 @@ function useImperativeIframes(tabs: Tab[]) {
         continue;
       }
 
-      // Otherwise subscribe to load
+      // Otherwise subscribe to load/content ready events
       const listener = () => {
-        setLoadingState((prev) => {
-          const next = new Map(prev);
-          next.set(tab.id, true);
-          return next;
-        });
+        // Only mark as ready when both loaded AND content is ready
+        if (entry.loaded && entry.contentReady) {
+          setLoadingState((prev) => {
+            const next = new Map(prev);
+            next.set(tab.id, true);
+            return next;
+          });
+        }
       };
       entry.listeners.add(listener);
       unsubs.push(() => entry.listeners.delete(listener));
