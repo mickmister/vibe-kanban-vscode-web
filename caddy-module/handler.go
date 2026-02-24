@@ -230,12 +230,7 @@ func (p *PluginInjector) shouldWriteResponseBody(method string, statusCode int) 
 	return true
 }
 
-// customCSS is appended to all CSS responses.
-const customCSS = `
-/* vibe-kanban-vscode-web custom styles */
-`
-
-// processResponse checks if the response is JavaScript or CSS and processes it.
+// processResponse checks if the response is JavaScript and rewrites API URLs if needed.
 func (p *PluginInjector) processResponse(headers http.Header, body []byte) []byte {
 	// Skip rewrite if response is compressed (would corrupt the output)
 	contentEncoding := headers.Get("Content-Encoding")
@@ -245,22 +240,16 @@ func (p *PluginInjector) processResponse(headers http.Header, body []byte) []byt
 
 	// Check Content-Type header (case-insensitive)
 	contentType := headers.Get("Content-Type")
+
+	// Only process JavaScript responses
+	// Common content types: application/javascript, text/javascript, application/x-javascript
 	contentTypeLower := strings.ToLower(contentType)
-
-	if strings.Contains(contentTypeLower, "javascript") {
-		return p.rewriteJavaScript(body)
+	if !strings.Contains(contentTypeLower, "javascript") {
+		return body
 	}
 
-	if strings.Contains(contentTypeLower, "text/css") {
-		return p.appendCSS(body)
-	}
-
-	return body
-}
-
-// appendCSS appends custom CSS to stylesheet responses.
-func (p *PluginInjector) appendCSS(css []byte) []byte {
-	return append(css, []byte(customCSS)...)
+	// Rewrite API URLs in JavaScript
+	return p.rewriteJavaScript(body)
 }
 
 // rewriteJavaScript replaces the official VK cloud API URL with the custom one.

@@ -72,7 +72,8 @@
 
 	# Main application - proxy to vibe-kanban on localhost:3007 (fallback)
 	handle /* {
-		vk_rewrite
+		# VK_SHARED_API_BASE now configured at runtime (PR #2769)
+		# No custom Caddy module needed
 
 		reverse_proxy localhost:3007 {
 			# Handle WebSocket connections for hot reload, etc.
