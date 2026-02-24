@@ -48,6 +48,7 @@
 		path /@fs/*
 		path /kv/*
 		path /rpc/*
+		path /assets/*
 	}
 
 	@vibe_dashboard_ws {
