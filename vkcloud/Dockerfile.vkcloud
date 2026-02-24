@@ -1,0 +1,121 @@
+# syntax=docker/dockerfile:1.6
+#
+# Standalone Dockerfile for self-hosted Vibe Kanban Cloud
+# Clones the vibe-kanban repo and builds the remote server + frontend
+#
+# Build: docker build -f Dockerfile.vkcloud -t vk-cloud:latest .
+# Run: Use docker-compose.vkcloud.yaml for full stack deployment
+#
+
+ARG VK_REPO_URL
+ARG VK_BRANCH
+ARG FEATURES
+
+# ============================================================================
+# Stage 1: Clone the Vibe Kanban repository
+# ============================================================================
+FROM alpine:3.19 AS repo-cloner
+
+ARG VK_REPO_URL
+ARG VK_BRANCH
+
+RUN apk add --no-cache git
+
+WORKDIR /clone
+RUN git clone --depth 1 --branch ${VK_BRANCH} ${VK_REPO_URL} vibe-kanban
+
+# ============================================================================
+# Stage 2: Build the remote frontend (React + Vite)
+# ============================================================================
+FROM node:20-alpine AS fe-builder
+
+WORKDIR /repo
+
+RUN corepack enable
+
+# Copy package files for dependency installation
+COPY --from=repo-cloner /clone/vibe-kanban/pnpm-lock.yaml /clone/vibe-kanban/pnpm-workspace.yaml /clone/vibe-kanban/package.json ./
+COPY --from=repo-cloner /clone/vibe-kanban/frontend/package.json frontend/package.json
+COPY --from=repo-cloner /clone/vibe-kanban/remote-frontend/package.json remote-frontend/package.json
+
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
+    pnpm install --filter ./remote-frontend --frozen-lockfile
+
+# Copy source files and build
+COPY --from=repo-cloner /clone/vibe-kanban/remote-frontend/ remote-frontend/
+COPY --from=repo-cloner /clone/vibe-kanban/shared/ shared/
+
+RUN pnpm -C remote-frontend build
+
+# ============================================================================
+# Stage 3: Build the remote server (Rust)
+# ============================================================================
+FROM rust:1.93-slim-bookworm AS builder
+
+ARG FEATURES
+ARG POSTHOG_API_KEY
+ARG POSTHOG_API_ENDPOINT
+
+ENV CARGO_REGISTRIES_CRATES_IO_PROTOCOL=sparse
+ENV POSTHOG_API_KEY=${POSTHOG_API_KEY}
+ENV POSTHOG_API_ENDPOINT=${POSTHOG_API_ENDPOINT}
+
+# Install build dependencies
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends pkg-config libssl-dev ca-certificates git \
+  && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Copy source from cloned repo
+COPY --from=repo-cloner /clone/vibe-kanban/rust-toolchain.toml ./
+COPY --from=repo-cloner /clone/vibe-kanban/Cargo.toml /clone/vibe-kanban/Cargo.lock ./
+COPY --from=repo-cloner /clone/vibe-kanban/crates crates
+COPY --from=repo-cloner /clone/vibe-kanban/shared shared
+COPY --from=repo-cloner /clone/vibe-kanban/assets assets
+
+RUN mkdir -p /app/bin
+
+# When building without FEATURES (self-hosted), strip the private billing dependency
+# This allows building without access to the private vibe-kanban-private repo
+RUN if [ -z "${FEATURES}" ]; then \
+      sed -i '/^billing = {.*vibe-kanban-private.*/d' crates/remote/Cargo.toml; \
+      sed -i '/^# private crate for billing/d' crates/remote/Cargo.toml; \
+      sed -i '/^vk-billing = \["dep:billing"\]/d' crates/remote/Cargo.toml; \
+      rm -f crates/remote/Cargo.lock; \
+    fi
+
+# Build the remote server binary
+RUN --mount=type=cache,target=/usr/local/cargo/registry \
+    --mount=type=cache,target=/usr/local/cargo/git \
+    --mount=type=cache,target=/app/target \
+    cargo build ${FEATURES:+--locked} --release --manifest-path crates/remote/Cargo.toml ${FEATURES:+--features ${FEATURES}} \
+ && cp crates/remote/target/release/remote /app/bin/remote
+
+# ============================================================================
+# Stage 4: Runtime image
+# ============================================================================
+FROM debian:bookworm-slim AS runtime
+
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends ca-certificates libssl3 wget \
+  && rm -rf /var/lib/apt/lists/* \
+  && useradd --system --create-home --uid 10001 appuser
+
+WORKDIR /srv
+
+# Copy binary and static frontend assets
+COPY --from=builder /app/bin/remote /usr/local/bin/remote
+COPY --from=fe-builder /repo/remote-frontend/dist /srv/static
+
+USER appuser
+
+ENV SERVER_LISTEN_ADDR=0.0.0.0:8081 \
+    RUST_LOG=info
+
+EXPOSE 8081
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+  CMD ["wget","--spider","-q","http://127.0.0.1:8081/health"]
+
+ENTRYPOINT ["/usr/local/bin/remote"]

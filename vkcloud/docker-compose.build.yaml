@@ -1,0 +1,35 @@
+# ============================================================================
+# Docker Compose for Building VK Cloud Image
+# ============================================================================
+#
+# This file is used ONLY for building and publishing the vk-remote image.
+# The main docker-compose.yaml should reference the published image instead.
+#
+# Usage:
+#   1. Build the image:
+#      docker compose -f docker-compose.build.yaml build vk-remote
+#
+#   2. Tag for GHCR:
+#      docker tag vkcloud-vk-remote ghcr.io/YOUR_USERNAME/vk-cloud:TAG
+#
+#   3. Push to GHCR:
+#      docker push ghcr.io/YOUR_USERNAME/vk-cloud:TAG
+#
+#   Or use the publish script:
+#      ./publish-to-ghcr-gh.sh
+#
+# ============================================================================
+
+services:
+  vk-remote:
+    build:
+      context: .
+      dockerfile: Dockerfile.vkcloud
+      args:
+        VK_REPO_URL: ${VK_REPO_URL:-https://github.com/BloopAI/vibe-kanban.git}
+        VK_BRANCH: ${VK_BRANCH:-v0.1.15-20260218201323}
+        FEATURES: ${FEATURES:-}
+        POSTHOG_API_KEY: ${POSTHOG_API_KEY:-}
+        POSTHOG_API_ENDPOINT: ${POSTHOG_API_ENDPOINT:-}
+    image: vkcloud-vk-remote:${IMAGE_TAG:-latest}
+    # No other services needed - this is just for building the image
