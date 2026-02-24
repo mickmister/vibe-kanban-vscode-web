@@ -148,12 +148,14 @@ export function WorkspaceShell({ workspace, session, actions, sessionActions }: 
         />
       </div>
 
-      <AddTabModal
-        isOpen={addTabModalOpen}
-        onClose={() => setAddTabModalOpen(false)}
-        onAdd={handleAddTab}
-        onAddVKWorkspace={handleAddVKWorkspace}
-      />
+      {addTabModalOpen && (
+        <AddTabModal
+          isOpen={addTabModalOpen}
+          onClose={() => setAddTabModalOpen(false)}
+          onAdd={handleAddTab}
+          onAddVKWorkspace={handleAddVKWorkspace}
+        />
+      )}
     </div>
   );
 }

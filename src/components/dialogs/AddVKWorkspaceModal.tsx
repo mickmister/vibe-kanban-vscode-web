@@ -65,6 +65,20 @@ export function AddVKWorkspaceModal({
     }
   }, [searchQuery, taskAttempts]);
 
+  const refreshTaskAttemptContainerAndRefetchTaskAttempt = async (taskAttemptId: string) => {
+    const response = await fetch(`${window.location.origin}/api/task-attempts/${taskAttemptId}/branch-status`);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch workspaces: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    console.log(data);
+
+    const attempt = await fetch(`${window.location.origin}/api/task-attempts/${taskAttemptId}`).then(r => r.json());
+    console.log(attempt);
+    return attempt.data;
+  };
+
   const fetchTaskAttempts = async () => {
     setLoading(true);
     setError(null);
@@ -95,14 +109,23 @@ export function AddVKWorkspaceModal({
     }
   };
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     const selected = taskAttempts.find((ta) => ta.id === selectedId);
     if (!selected) return;
 
-    const containerRef =
-      selected.container_ref || `/var/tmp/vibe-kanban/worktrees/${selected.branch.slice(3)}`;
+    let containerRef = selected.container_ref;
 
-    onAdd(selected.id, selected.name || 'Untitled Workspace', containerRef);
+    if (!containerRef) {
+      try {
+
+        const attempt: {container_ref: string | null} = await refreshTaskAttemptContainerAndRefetchTaskAttempt(selected.id);
+        containerRef = attempt.container_ref;
+      } catch (e) {
+        console.error('Failed to refresh container ref', e);
+      }
+    }
+
+    onAdd(selected.id, selected.name || 'Untitled Workspace', containerRef || '');
     onClose();
   };
 
