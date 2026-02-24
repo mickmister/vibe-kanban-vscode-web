@@ -9,6 +9,11 @@ import { storybookTest } from '@storybook/addon-vitest/vitest-plugin';
 import { playwright } from '@vitest/browser-playwright';
 const dirname = typeof __dirname !== 'undefined' ? __dirname : path.dirname(fileURLToPath(import.meta.url));
 
+let serverPort = 1337;
+if (process.env.PORT) {
+  serverPort = parseInt(process.env.PORT);
+}
+
 // More info at: https://storybook.js.org/docs/next/writing-tests/integrations/vitest-addon
 const platformVariant = process.env.SPRINGBOARD_PLATFORM || '';
 let devPort = 3000;
@@ -33,7 +38,7 @@ export default defineConfig({
       title: 'Vibe Kanban Workspace',
       description: 'Workspace shell for code-server and vibe-kanban'
     },
-    nodeServerPort: 1337
+    nodeServerPort: serverPort,
   })],
   resolve: {
     alias: {
