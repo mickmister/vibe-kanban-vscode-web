@@ -1,0 +1,64 @@
+# Minimal docker-compose for testing base infrastructure in Coolify
+# Only includes postgres, azurite, and azurite-init
+# Use this to verify the base stack deploys successfully before adding vk-remote
+
+services:
+  vk-postgres:
+    image: postgres:16-alpine
+    command: [ "postgres", "-c", "wal_level=logical" ]
+    environment:
+      POSTGRES_DB: ${VK_POSTGRES_DB:-remote}
+      POSTGRES_USER: ${VK_POSTGRES_USER:-remote}
+      POSTGRES_PASSWORD: ${VK_POSTGRES_PASSWORD:-remote}
+    volumes:
+      - vk-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${VK_POSTGRES_USER:-remote} -d ${VK_POSTGRES_DB:-remote}" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    networks:
+      - vk-cloud
+    restart: unless-stopped
+
+  vk-azurite:
+    image: mcr.microsoft.com/azure-storage/azurite:3.35.0
+    command: "azurite-blob --blobHost 0.0.0.0 --blobPort 10000 --loose --skipApiVersionCheck"
+    volumes:
+      - vk-azurite-data:/data
+    healthcheck:
+      test: nc 127.0.0.1 10000 -z
+      interval: 1s
+      retries: 30
+    networks:
+      - vk-cloud
+    restart: unless-stopped
+
+  vk-azurite-init:
+    image: mcr.microsoft.com/azure-cli:2.83.0
+    depends_on:
+      vk-azurite:
+        condition: service_healthy
+    environment:
+      AZURE_STORAGE_CONNECTION_STRING: "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://vk-azurite:10000/devstoreaccount1;"
+    entrypoint: /bin/sh
+    command:
+      - -c
+      - |
+        set -e
+        az storage container create --name issue-attachments 2>/dev/null || true
+        az storage cors add --services b --methods GET PUT POST DELETE OPTIONS --origins '*' --allowed-headers '*' --exposed-headers '*' --max-age 3600 2>/dev/null || true
+        echo "Azurite CORS configured successfully"
+    networks:
+      - vk-cloud
+
+volumes:
+  vk-postgres-data:
+    driver: local
+  vk-azurite-data:
+    driver: local
+
+networks:
+  vk-cloud:
+    driver: bridge

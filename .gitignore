@@ -5,3 +5,6 @@ data/kv.db
 .springboard
 index.html
 storybook-static
+debug-*
+.env.vkcloud
+.env
