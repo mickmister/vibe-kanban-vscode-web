@@ -32,6 +32,19 @@
 		}
 	}
 
+	@vibe_kanban_assets {
+		path /assets/index-IL3ZsWVw.js
+		path /assets/index-rgkyaWEk.css
+	}
+
+	handle @vibe_kanban_assets {
+		reverse_proxy localhost:3007 {
+			header_up Host {upstream_hostport}
+			header_up Upgrade {http.request.header.Upgrade}
+			header_up Connection {http.request.header.Connection}
+		}
+	}
+
 	# Vibe Dashboard app
 	@vibe_dashboard_root {
 		path /dashboard
