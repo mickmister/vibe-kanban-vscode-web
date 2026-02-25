@@ -1,0 +1,31 @@
+name: Publish VK Cloud Image to GHCR
+
+on:
+  push:
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: Docker image tag to publish
+        required: true
+        default: latest
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Publish image to GHCR
+        working-directory: vkcloud
+        env:
+          GH_TOKEN: ${{ github.token }}
+          IMAGE_TAG: ${{ inputs.image_tag || 'remote-v0.1.11' }}
+        run: |
+          chmod +x publish-to-ghcr-gh.sh
+          ./publish-to-ghcr-gh.sh
