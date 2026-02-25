@@ -60,7 +60,9 @@ echo -e "${GREEN}GitHub username:${NC} ${GITHUB_USERNAME}"
 log "Username resolved: ${GITHUB_USERNAME}"
 
 GHCR_IMAGE="ghcr.io/${GITHUB_USERNAME}/${IMAGE_NAME}:${IMAGE_TAG}"
+GHCR_IMAGE_LATEST="ghcr.io/${GITHUB_USERNAME}/${IMAGE_NAME}:latest"
 echo -e "${YELLOW}Image will be published as:${NC} ${GHCR_IMAGE}"
+echo -e "${YELLOW}Also publishing as:${NC} ${GHCR_IMAGE_LATEST}"
 echo ""
 
 # Authenticate Docker with GHCR using gh token
@@ -99,6 +101,8 @@ log "Tagging image for GHCR..."
 echo -e "${GREEN}Tagging image for GHCR...${NC}"
 docker tag "${LOCAL_IMAGE}" "${GHCR_IMAGE}"
 log "Tagging complete: ${LOCAL_IMAGE} -> ${GHCR_IMAGE}"
+docker tag "${LOCAL_IMAGE}" "${GHCR_IMAGE_LATEST}"
+log "Tagging complete: ${LOCAL_IMAGE} -> ${GHCR_IMAGE_LATEST}"
 
 # Push to GHCR
 echo ""
@@ -106,11 +110,14 @@ log "Pushing image to GHCR (this may take several minutes)..."
 echo -e "${GREEN}Pushing to GHCR...${NC}"
 docker push "${GHCR_IMAGE}" 2>&1 | tee /tmp/vk-push.log
 log "Push complete"
+docker push "${GHCR_IMAGE_LATEST}" 2>&1 | tee /tmp/vk-push-latest.log
+log "Latest push complete"
 
 echo ""
 echo -e "${GREEN}✓ Successfully published to GHCR!${NC}"
 echo ""
 echo "Image: ${GHCR_IMAGE}"
+echo "Image: ${GHCR_IMAGE_LATEST}"
 echo ""
 echo "To use this image in docker-compose.yaml:"
 echo ""
