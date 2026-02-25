@@ -37,9 +37,9 @@ const PRESETS = [
   },
   {
     key: 'kanban',
-    title: 'Agent',
+    title: 'Kanban',
     url: `${ORIGIN}/`,
-    description: 'Vibe Kanban agent board view',
+    description: 'Vibe Kanban board view',
   },
   {
     key: 'custom',
