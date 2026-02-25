@@ -1,10 +1,12 @@
 #!/bin/bash
 set -e
+set -o pipefail
 set -x  # Enable verbose command tracing
 
 # Configuration
 IMAGE_NAME="${IMAGE_NAME:-vk-cloud}"
 IMAGE_TAG="${IMAGE_TAG:-latest}"
+VK_BRANCH="${VK_BRANCH:-}"
 
 # Log each step with timestamp
 log() {
@@ -39,6 +41,13 @@ if ! gh auth status &> /dev/null; then
 fi
 log "gh authentication verified"
 
+if [ -z "${VK_BRANCH}" ]; then
+    echo -e "${RED}Error: VK_BRANCH is required${NC}"
+    echo "Set VK_BRANCH from the workflow environment."
+    exit 1
+fi
+log "Using VK_BRANCH: ${VK_BRANCH}"
+
 # Resolve GitHub username from GitHub Actions environment
 log "Resolving GitHub username from environment..."
 GITHUB_USERNAME="${GITHUB_USERNAME:-${GITHUB_REPOSITORY_OWNER:-}}"
@@ -65,7 +74,7 @@ echo ""
 log "Starting Docker build (this will take 7+ minutes)..."
 echo -e "${GREEN}Building image...${NC}"
 log "Running: docker compose -f docker-compose.build.yaml build vk-remote"
-IMAGE_TAG="${IMAGE_TAG}" docker compose -f docker-compose.build.yaml build vk-remote 2>&1 | tee /tmp/vk-build.log
+VK_BRANCH="${VK_BRANCH}" IMAGE_TAG="${IMAGE_TAG}" docker compose -f docker-compose.build.yaml build vk-remote 2>&1 | tee /tmp/vk-build.log
 log "Docker build completed"
 
 # Get the local image name
