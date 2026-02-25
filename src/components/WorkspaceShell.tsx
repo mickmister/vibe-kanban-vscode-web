@@ -102,10 +102,10 @@ export function WorkspaceShell({ workspace, session, actions, sessionActions }: 
       activeSpaceId: session.activeSpaceId,
     });
 
-    // Auto-select the new pair
+    // Auto-select the Agent tab (not the pair)
     if (result) {
       sessionActions.setActiveTabGroup(result.tabGroupId);
-      sessionActions.selectPair(result.tabGroupId, result.pairId);
+      sessionActions.selectTab(result.tabGroupId, result.agentTabId);
     }
   };
 

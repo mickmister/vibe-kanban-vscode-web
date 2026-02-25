@@ -178,6 +178,7 @@ springboard.registerModule('workspace', {rpcMode: 'remote'}, async (moduleAPI) =
     }) => {
       let tabGroupId: string | undefined;
       let pairId: string | undefined;
+      let agentTabId: string | undefined;
 
       workspaceState.setStateImmer((draft) => {
         const space = draft.spaces.find((s) => s.id === args.activeSpaceId);
@@ -188,6 +189,9 @@ springboard.registerModule('workspace', {rpcMode: 'remote'}, async (moduleAPI) =
         pairId = `pair_${draft.nextId++}`;
         const kanbanTabId = `tab_${draft.nextId++}`;
         const codeTabId = `tab_${draft.nextId++}`;
+
+        // Store agent tab ID for return
+        agentTabId = kanbanTabId;
 
         // Create the new tab group
         draft.tabGroups.push({
@@ -218,12 +222,12 @@ springboard.registerModule('workspace', {rpcMode: 'remote'}, async (moduleAPI) =
         // Add tab group to the space
         space.tabGroupIds.push(tabGroupId);
       });
-      
-      if (!(tabGroupId && pairId)) {
+
+      if (!(tabGroupId && pairId && agentTabId)) {
         return undefined;
       }
-      
-      return { tabGroupId, pairId };
+
+      return { tabGroupId, pairId, agentTabId };
     },
 
     updateTabUrl: async (args: { tabGroupId: string; tabId: string; newUrl: string }) => {
