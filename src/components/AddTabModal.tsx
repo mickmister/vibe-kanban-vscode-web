@@ -20,7 +20,7 @@ interface AddTabModalProps {
   onAddTabGroup?: (label: string) => void;
 }
 
-const ORIGIN = 'https://jamtools.dev';
+const ORIGIN = location.origin;
 
 const PRESETS = [
   {
