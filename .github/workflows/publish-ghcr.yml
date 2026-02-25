@@ -8,6 +8,9 @@ on:
         description: Docker image tag to publish
         required: true
         default: latest
+      vk_branch:
+        description: vibe-kanban git branch/tag/sha to build
+        required: true
 
 permissions:
   contents: read
@@ -26,6 +29,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           IMAGE_TAG: ${{ inputs.image_tag || 'remote-v0.1.11' }}
+          VK_BRANCH: ${{ github.event_name == 'workflow_dispatch' && inputs.vk_branch || 'remote-v0.1.11' }}
           GITHUB_USERNAME: ${{ github.repository_owner }}
           GITHUB_REPOSITORY_OWNER: ${{ github.repository_owner }}
           GITHUB_REPOSITORY: ${{ github.repository }}

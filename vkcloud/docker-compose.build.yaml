@@ -27,7 +27,7 @@ services:
       dockerfile: Dockerfile.vkcloud
       args:
         VK_REPO_URL: ${VK_REPO_URL:-https://github.com/BloopAI/vibe-kanban.git}
-        VK_BRANCH: ${VK_BRANCH:-v0.1.15-20260218201323}
+        VK_BRANCH: ${VK_BRANCH}
         FEATURES: ${FEATURES:-}
         POSTHOG_API_KEY: ${POSTHOG_API_KEY:-}
         POSTHOG_API_ENDPOINT: ${POSTHOG_API_ENDPOINT:-}
