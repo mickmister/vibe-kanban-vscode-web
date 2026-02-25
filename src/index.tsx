@@ -196,7 +196,7 @@ springboard.registerModule('workspace', {rpcMode: 'remote'}, async (moduleAPI) =
           tabs: [
             {
               id: kanbanTabId,
-              title: 'Kanban',
+              title: 'Agent',
               url: `/workspaces/${args.taskAttemptId}`,
             },
             {

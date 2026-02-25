@@ -24,34 +24,22 @@ const ORIGIN = 'https://jamtools.dev';
 
 const PRESETS = [
   {
-    key: 'tab-group',
-    title: 'Empty Tab Group',
-    url: '',
-    description: 'Create a new tab group with no tabs',
-  },
-  {
     key: 'vk-workspace',
-    title: 'VK Workspace',
+    title: 'Open Existing Workspace',
     url: '',
-    description: 'Add workspace with Kanban + Code split view',
+    description: 'Add workspace with Agent + Code split view',
   },
   {
     key: 'code',
     title: 'Code Server',
-    url: `${ORIGIN}/?folder=/home/vkuser/repos`,
-    description: 'VS Code editor',
+    url: '', // Will be provided by user via custom input
+    description: 'VS Code editor with custom folder path',
   },
   {
     key: 'kanban',
-    title: 'Vibe Kanban',
+    title: 'Agent',
     url: `${ORIGIN}/`,
-    description: 'Kanban board (default route)',
-  },
-  {
-    key: 'kanban-chat',
-    title: 'Kanban Chat',
-    url: `${ORIGIN}/workspaces/`,
-    description: 'Vibe Kanban workspace chat',
+    description: 'Vibe Kanban agent board view',
   },
   {
     key: 'custom',
@@ -73,8 +61,12 @@ export function AddTabModal({ isOpen, onClose, onAdd, onAddVKWorkspace, onAddTab
     const preset = PRESETS.find((p) => p.key === key);
     if (!preset) return;
 
-    if (key === 'custom') {
+    if (key === 'custom' || key === 'code') {
       setShowCustom(true);
+      if (key === 'code') {
+        setTitle('Code Server');
+        setUrl(`${ORIGIN}/?folder=`);
+      }
       return;
     }
 

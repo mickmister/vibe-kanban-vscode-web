@@ -24,12 +24,14 @@ interface AddVKWorkspaceModalProps {
   isOpen: boolean;
   onClose: () => void;
   onAdd: (taskAttemptId: string, name: string, containerRef: string) => void;
+  onAddWithPath?: (workspacePath: string, name: string) => void;
 }
 
 export function AddVKWorkspaceModal({
   isOpen,
   onClose,
   onAdd,
+  onAddWithPath,
 }: AddVKWorkspaceModalProps) {
   const [taskAttempts, setTaskAttempts] = useState<TaskAttempt[]>([]);
   const [filteredAttempts, setFilteredAttempts] = useState<TaskAttempt[]>([]);
@@ -37,6 +39,9 @@ export function AddVKWorkspaceModal({
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [showPathInput, setShowPathInput] = useState(false);
+  const [customPath, setCustomPath] = useState('');
+  const [customName, setCustomName] = useState('');
 
   useEffect(() => {
     if (isOpen) {
@@ -45,6 +50,9 @@ export function AddVKWorkspaceModal({
       // Reset state when modal closes
       setSearchQuery('');
       setSelectedId(null);
+      setShowPathInput(false);
+      setCustomPath('');
+      setCustomName('');
     }
   }, [isOpen]);
 
@@ -129,91 +137,159 @@ export function AddVKWorkspaceModal({
     onClose();
   };
 
+  const handleAddWithPath = () => {
+    if (!customPath.trim()) return;
+
+    const name = customName.trim() || 'Custom Workspace';
+
+    // If onAddWithPath is provided, use it
+    if (onAddWithPath) {
+      onAddWithPath(customPath.trim(), name);
+    } else {
+      // Fallback: treat path as containerRef and create empty taskAttemptId
+      onAdd('', name, customPath.trim());
+    }
+    onClose();
+  };
+
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="2xl">
       <ModalContent>
         <ModalHeader className="flex flex-col gap-1">
           <h2 className="text-lg font-semibold">Add VK Workspace</h2>
           <p className="text-sm text-neutral-400 font-normal">
-            Select a workspace to open in split view (Kanban + Code)
+            {showPathInput
+              ? 'Enter workspace path or directory'
+              : 'Select a workspace to open in split view (Agent + Code)'}
           </p>
         </ModalHeader>
         <ModalBody>
-          <Input
-            placeholder="Search workspaces..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            size="sm"
-            classNames={{
-              inputWrapper: 'bg-neutral-800',
-            }}
-          />
-
-          {loading && (
-            <div className="flex items-center justify-center py-8">
-              <Spinner size="lg" />
+          {showPathInput ? (
+            <div className="space-y-3">
+              <Input
+                label="Workspace Name"
+                placeholder="My Workspace"
+                value={customName}
+                onChange={(e) => setCustomName(e.target.value)}
+                size="sm"
+                classNames={{
+                  inputWrapper: 'bg-neutral-800',
+                }}
+              />
+              <Input
+                label="Path"
+                placeholder="/absolute/path or VK workspace ID/URL"
+                value={customPath}
+                onChange={(e) => setCustomPath(e.target.value)}
+                size="sm"
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleAddWithPath();
+                }}
+                classNames={{
+                  inputWrapper: 'bg-neutral-800',
+                }}
+                description="Provide an absolute directory path or VK workspace ID/URL"
+              />
             </div>
-          )}
-
-          {error && (
-            <div className="text-red-400 text-sm p-4 bg-red-500/10 rounded">
-              {error}
-            </div>
-          )}
-
-          {!loading && !error && filteredAttempts.length === 0 && (
-            <div className="text-neutral-500 text-center py-8">
-              {searchQuery
-                ? 'No workspaces match your search'
-                : 'No workspaces available'}
-            </div>
-          )}
-
-          {!loading && !error && filteredAttempts.length > 0 && (
-            <div className="flex flex-col gap-2 max-h-96 overflow-y-auto">
-              {filteredAttempts.map((ta) => (
-                <div
-                  key={ta.id}
-                  onClick={() => setSelectedId(ta.id)}
-                  className={`p-3 rounded-lg cursor-pointer transition-colors ${
-                    selectedId === ta.id
-                      ? 'bg-primary-500/20 border border-primary-500'
-                      : 'bg-neutral-800 hover:bg-neutral-700 border border-transparent'
-                  }`}
+          ) : (
+            <>
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Search workspaces..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  size="sm"
+                  classNames={{
+                    inputWrapper: 'bg-neutral-800',
+                  }}
+                  className="flex-1"
+                />
+                <Button
+                  size="sm"
+                  variant="flat"
+                  onPress={() => setShowPathInput(true)}
                 >
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        {ta.pinned && <span className="text-yellow-500">📌</span>}
-                        <h3 className="font-medium text-sm truncate">
-                          {ta.name || 'Untitled'}
-                        </h3>
-                      </div>
-                      <p className="text-xs text-neutral-400 mt-1">
-                        Branch: {ta.branch}
-                      </p>
-                      {ta.agent_working_dir && (
-                        <p className="text-xs text-neutral-500 mt-0.5">
-                          Dir: {ta.agent_working_dir}
-                        </p>
-                      )}
-                    </div>
-                  </div>
+                  Custom Path
+                </Button>
+              </div>
+
+              {loading && (
+                <div className="flex items-center justify-center py-8">
+                  <Spinner size="lg" />
                 </div>
-              ))}
-            </div>
+              )}
+
+              {error && (
+                <div className="text-red-400 text-sm p-4 bg-red-500/10 rounded">
+                  {error}
+                </div>
+              )}
+
+              {!loading && !error && filteredAttempts.length === 0 && (
+                <div className="text-neutral-500 text-center py-8">
+                  {searchQuery
+                    ? 'No workspaces match your search'
+                    : 'No workspaces available'}
+                </div>
+              )}
+
+              {!loading && !error && filteredAttempts.length > 0 && (
+                <div className="flex flex-col gap-2 max-h-96 overflow-y-auto">
+                  {filteredAttempts.map((ta) => (
+                    <div
+                      key={ta.id}
+                      onClick={() => setSelectedId(ta.id)}
+                      className={`p-3 rounded-lg cursor-pointer transition-colors ${
+                        selectedId === ta.id
+                          ? 'bg-primary-500/20 border border-primary-500'
+                          : 'bg-neutral-800 hover:bg-neutral-700 border border-transparent'
+                      }`}
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            {ta.pinned && <span className="text-yellow-500">📌</span>}
+                            <h3 className="font-medium text-sm truncate">
+                              {ta.name || 'Untitled'}
+                            </h3>
+                          </div>
+                          <p className="text-xs text-neutral-400 mt-1">
+                            Branch: {ta.branch}
+                          </p>
+                          {ta.agent_working_dir && (
+                            <p className="text-xs text-neutral-500 mt-0.5">
+                              Dir: {ta.agent_working_dir}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
           )}
         </ModalBody>
         <ModalFooter>
+          {showPathInput && (
+            <Button
+              size="sm"
+              variant="flat"
+              onPress={() => setShowPathInput(false)}
+            >
+              Back
+            </Button>
+          )}
           <Button color="default" variant="light" onPress={onClose}>
             Cancel
           </Button>
           <Button
             color="primary"
-            onPress={handleAdd}
-            isDisabled={!selectedId || loading}
+            onPress={showPathInput ? handleAddWithPath : handleAdd}
+            isDisabled={showPathInput ? !customPath.trim() : (!selectedId || loading)}
           >
-            Add Workspace
+            {showPathInput ? 'Add' : 'Add Workspace'}
           </Button>
         </ModalFooter>
       </ModalContent>
