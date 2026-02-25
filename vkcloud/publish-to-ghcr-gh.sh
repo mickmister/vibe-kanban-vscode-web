@@ -39,11 +39,16 @@ if ! gh auth status &> /dev/null; then
 fi
 log "gh authentication verified"
 
-# Get GitHub username from gh CLI
-log "Getting GitHub username..."
-GITHUB_USERNAME=$(gh api user -q .login)
+# Resolve GitHub username from GitHub Actions environment
+log "Resolving GitHub username from environment..."
+GITHUB_USERNAME="${GITHUB_USERNAME:-${GITHUB_REPOSITORY_OWNER:-}}"
+if [ -z "${GITHUB_USERNAME}" ]; then
+    echo -e "${RED}Error: GITHUB_USERNAME (or GITHUB_REPOSITORY_OWNER) is required${NC}"
+    echo "This script is intended to run in GitHub Actions."
+    exit 1
+fi
 echo -e "${GREEN}GitHub username:${NC} ${GITHUB_USERNAME}"
-log "Username retrieved: ${GITHUB_USERNAME}"
+log "Username resolved: ${GITHUB_USERNAME}"
 
 GHCR_IMAGE="ghcr.io/${GITHUB_USERNAME}/${IMAGE_NAME}:${IMAGE_TAG}"
 echo -e "${YELLOW}Image will be published as:${NC} ${GHCR_IMAGE}"
