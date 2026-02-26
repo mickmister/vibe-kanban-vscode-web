@@ -40,6 +40,7 @@ export function UnifiedTabView({
   const hoverTriggerRef = useRef<HTMLDivElement>(null);
   const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
   const longPressTabIdRef = useRef<string | null>(null);
+  const hoverDelayTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const isVisible = isPinned || isHovering;
 
@@ -231,6 +232,9 @@ export function UnifiedTabView({
       if (longPressTimerRef.current) {
         clearTimeout(longPressTimerRef.current);
       }
+      if (hoverDelayTimerRef.current) {
+        clearTimeout(hoverDelayTimerRef.current);
+      }
     };
   }, []);
 
@@ -245,7 +249,19 @@ export function UnifiedTabView({
       <div
         ref={hoverTriggerRef}
         className="absolute top-0 left-0 right-0 h-2 z-40"
-        onMouseEnter={() => setIsHovering(true)}
+        onMouseEnter={() => {
+          // Start timer to show bar after 0.5s
+          hoverDelayTimerRef.current = setTimeout(() => {
+            setIsHovering(true);
+          }, 500);
+        }}
+        onMouseLeave={() => {
+          // Cancel timer if mouse leaves before delay completes
+          if (hoverDelayTimerRef.current) {
+            clearTimeout(hoverDelayTimerRef.current);
+            hoverDelayTimerRef.current = null;
+          }
+        }}
       />
 
       {/* Auto-hiding top bar container */}
@@ -254,7 +270,14 @@ export function UnifiedTabView({
         className={`absolute top-0 left-0 right-0 z-50 transition-transform duration-200 ${
           isVisible ? 'translate-y-0' : '-translate-y-full'
         }`}
-        onMouseEnter={() => setIsHovering(true)}
+        onMouseEnter={() => {
+          // Clear any pending delay timer
+          if (hoverDelayTimerRef.current) {
+            clearTimeout(hoverDelayTimerRef.current);
+            hoverDelayTimerRef.current = null;
+          }
+          setIsHovering(true);
+        }}
         onMouseLeave={() => setIsHovering(false)}
       >
         {/* Address bar at the very top */}
