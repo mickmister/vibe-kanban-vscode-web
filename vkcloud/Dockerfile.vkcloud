@@ -24,6 +24,13 @@ RUN apk add --no-cache git
 WORKDIR /clone
 RUN git clone --depth 1 --branch ${VK_BRANCH} ${VK_REPO_URL} vibe-kanban
 
+# Create a marker file to indicate which monorepo structure is present
+RUN if [ -d /clone/vibe-kanban/remote-frontend ]; then \
+      echo "new" > /clone/structure.txt; \
+    else \
+      echo "old" > /clone/structure.txt; \
+    fi
+
 # ============================================================================
 # Stage 2: Build the remote frontend (React + Vite)
 # ============================================================================
@@ -33,19 +40,54 @@ WORKDIR /repo
 
 RUN corepack enable
 
-# Copy package files for dependency installation
+# Copy workspace files and source code
+# Note: Structure changed from packages/* to root-level frontend/remote-frontend
+# Old branches (<=remote-v0.1.13): packages/remote-web, packages/local-web
+# New branches: remote-frontend, frontend
 COPY --from=repo-cloner /clone/vibe-kanban/pnpm-lock.yaml /clone/vibe-kanban/pnpm-workspace.yaml /clone/vibe-kanban/package.json ./
-COPY --from=repo-cloner /clone/vibe-kanban/frontend/package.json frontend/package.json
-COPY --from=repo-cloner /clone/vibe-kanban/remote-frontend/package.json remote-frontend/package.json
+COPY --from=repo-cloner /clone/structure.txt /tmp/structure.txt
 
+# Copy all source files based on the repository structure
+RUN STRUCTURE=$(cat /tmp/structure.txt) && \
+    if [ "$STRUCTURE" = "new" ]; then \
+      echo "Using new monorepo structure (remote-frontend/)"; \
+    else \
+      echo "Using old monorepo structure (packages/remote-web/)"; \
+    fi
+
+COPY --from=repo-cloner /clone/vibe-kanban/ /clone-vk/
+
+# Set up the correct directory structure and copy all files
+RUN STRUCTURE=$(cat /tmp/structure.txt) && \
+    if [ "$STRUCTURE" = "new" ]; then \
+      cp -r /clone-vk/remote-frontend ./; \
+      cp -r /clone-vk/frontend ./; \
+      cp -r /clone-vk/shared ./; \
+    else \
+      cp -r /clone-vk/packages ./; \
+      cp -r /clone-vk/shared ./; \
+    fi
+
+# Install dependencies
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
-    pnpm install --filter ./remote-frontend --frozen-lockfile
+    pnpm install --frozen-lockfile
 
-# Copy source files and build
-COPY --from=repo-cloner /clone/vibe-kanban/remote-frontend/ remote-frontend/
-COPY --from=repo-cloner /clone/vibe-kanban/shared/ shared/
+# Build the frontend (path differs between old and new structure)
+RUN STRUCTURE=$(cat /tmp/structure.txt) && \
+    if [ "$STRUCTURE" = "new" ]; then \
+      pnpm -C remote-frontend build; \
+    else \
+      pnpm -C packages/remote-web build; \
+    fi
 
-RUN pnpm -C remote-frontend build
+# Create a consistent output location for the runtime stage to copy from
+RUN STRUCTURE=$(cat /tmp/structure.txt) && \
+    mkdir -p /output && \
+    if [ "$STRUCTURE" = "new" ]; then \
+      cp -r remote-frontend/dist /output/dist; \
+    else \
+      cp -r packages/remote-web/dist /output/dist; \
+    fi
 
 # ============================================================================
 # Stage 3: Build the remote server (Rust)
@@ -106,7 +148,7 @@ WORKDIR /srv
 
 # Copy binary and static frontend assets
 COPY --from=builder /app/bin/remote /usr/local/bin/remote
-COPY --from=fe-builder /repo/remote-frontend/dist /srv/static
+COPY --from=fe-builder /output/dist /srv/static
 
 USER appuser
 
