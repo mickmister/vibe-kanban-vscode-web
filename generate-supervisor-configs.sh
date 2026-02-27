@@ -15,8 +15,8 @@ OUTPUT_FILE="${1:-/etc/supervisor/conf.d/dynamic/vk-instances.conf}"
 DOMAINS="${VK_DOMAINS:-}"
 
 # Base ports for the first (default) domain
-DASHBOARD_BASE_PORT=3005
-KANBAN_BASE_PORT=3007
+DASHBOARD_BASE_PORT=4300
+KANBAN_BASE_PORT=4301
 
 # Create output directory if it doesn't exist
 mkdir -p "$(dirname "$OUTPUT_FILE")"
