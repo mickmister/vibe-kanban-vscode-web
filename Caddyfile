@@ -78,8 +78,8 @@
 				header_up Upgrade {http.request.header.Upgrade}
 				header_up Connection {http.request.header.Connection}
 
-				@wrapper_asset_404 status 404
-				handle_response @wrapper_asset_404 {
+				@wrapper_asset_error status 404 502
+				handle_response @wrapper_asset_error {
 					reverse_proxy localhost:3007 {
 						header_up Host {upstream_hostport}
 						header_up Upgrade {http.request.header.Upgrade}
