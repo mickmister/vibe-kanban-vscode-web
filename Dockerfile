@@ -54,6 +54,16 @@ RUN apt-get update && apt-get install -y debian-keyring debian-archive-keyring a
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
+# Install Docker CLI for Docker-in-Docker support (socket mounting)
+RUN mkdir -p /etc/apt/keyrings \
+    && curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg \
+    && chmod a+r /etc/apt/keyrings/docker.gpg \
+    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian bullseye stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null \
+    && apt-get update \
+    && apt-get install -y docker-ce-cli docker-compose-plugin \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+    
 # Install Tailscale
 RUN curl -fsSL https://pkgs.tailscale.com/stable/debian/bullseye.noarmor.gpg | tee /usr/share/keyrings/tailscale-archive-keyring.gpg >/dev/null \
     && curl -fsSL https://pkgs.tailscale.com/stable/debian/bullseye.tailscale-keyring.list | tee /etc/apt/sources.list.d/tailscale.list \
@@ -147,6 +157,10 @@ COPY startup.html /etc/caddy/startup.html
 COPY backup-vibe-kanban-db.sh /usr/local/bin/backup-vibe-kanban-db.sh
 RUN chmod +x /usr/local/bin/backup-vibe-kanban-db.sh
 
+# Copy entrypoint script that fixes docker group GID at runtime
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
 # Copy default VS Code settings
 RUN mkdir -p /home/vkuser/.local/share/code-server/User
 COPY default-settings.json /home/vkuser/.local/share/code-server/User/settings.json
@@ -163,6 +177,9 @@ RUN chown -R vkuser:vkuser /home/vkuser/.local
 EXPOSE 3001
 EXPOSE 3007
 EXPOSE 3008
+
+# Use entrypoint to fix docker group GID at runtime
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 
 # default supervisord in foreground
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]

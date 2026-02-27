@@ -35,6 +35,8 @@ services:
       VK_SHARED_API_BASE: ${VK_SHARED_API_BASE:-}
 
     volumes:
+      # Mount Docker socket for Docker-in-Docker support
+      - /var/run/docker.sock:/var/run/docker.sock
       # Persist git repositories
       # - ~/repos:/home/vkuser/repos
       - vibe-kanban-repos:/home/vkuser/repos
